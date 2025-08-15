@@ -1,5 +1,3 @@
-
-
 <script>
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'

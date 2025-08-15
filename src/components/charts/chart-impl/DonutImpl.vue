@@ -19,11 +19,16 @@ export default {
           datasets: [
             {
               data: props.data,
-              backgroundColor: ['#16a34a', '#84cc16', '#0ea5e9', '#64748b'],
+              backgroundColor: ['#a3e635', '#15803d', '#f59e0b', '#e5e7eb'],
             },
           ],
         },
-        options: { responsive: true, cutout: '68%', plugins: { legend: { position: 'bottom' } } },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: { legend: { display: false } },
+        },
       })
     }
     onMounted(render)
@@ -34,7 +39,9 @@ export default {
 </script>
 
 <template>
-  <canvas ref="canvasRef" class="w-full h-48"></canvas>
+  <div class="h-[260px]">
+    <canvas ref="canvasRef" class="w-full h-full"></canvas>
+  </div>
 </template>
 
 <style scoped></style>

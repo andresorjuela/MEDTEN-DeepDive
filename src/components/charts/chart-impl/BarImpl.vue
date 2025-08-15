@@ -13,7 +13,7 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, L
 
 export default {
   name: 'BarImpl',
-  props: { labels: Array, data: Array },
+  props: { labels: Array, datasets: Array },
   setup(props) {
     const canvasRef = ref(null)
     let chart
@@ -24,26 +24,36 @@ export default {
         type: 'bar',
         data: {
           labels: props.labels,
-          datasets: [
-            {
-              label: 'Count',
-              data: props.data,
-              backgroundColor: ['#16a34a', '#84cc16', '#a3e635', '#f97316'],
-            },
-          ],
+          datasets: (props.datasets || []).map((d) => ({
+            label: d.label,
+            data: d.data,
+            backgroundColor: d.color,
+            borderRadius: 6,
+            barThickness: 18,
+          })),
         },
-        options: { responsive: true, plugins: { legend: { display: false } } },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#e7ebea' }, ticks: { display: false } },
+          },
+        },
       })
     }
     onMounted(render)
-    watch(() => [props.labels, props.data], render, { deep: true })
+    watch(() => [props.labels, props.datasets], render, { deep: true })
     return { canvasRef }
   },
 }
 </script>
 
 <template>
-  <canvas ref="canvasRef" class="w-full h-48"></canvas>
+  <div class="h-[220px]">
+    <canvas ref="canvasRef" class="w-full h-full"></canvas>
+  </div>
 </template>
 
 <style scoped></style>

@@ -18,19 +18,42 @@ export default {
 
 <template>
   <header class="h-16 bg-card border-b border-border sticky top-0 z-10">
-    <div class="max-w-[1280px] mx-auto px-4 h-full flex items-center justify-between">
-      <div class="relative flex-1 max-w-xl">
+    <div class="max-w-[1280px] mx-auto px-4 h-full flex items-center justify-between gap-4">
+      <!-- Left: title -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="text-xl font-semibold text-heading">Sales Admin</div>
+        <span class="text-muted">▾</span>
+      </div>
+
+      <!-- Center: search pill -->
+      <div class="relative flex-1 max-w-2xl">
         <input
-          class="w-full rounded-xl border border-border pl-11 pr-3 py-2.5 bg-surface text-sm"
-          placeholder="Search anything…"
+          class="w-full rounded-full border border-border pl-5 pr-12 h-10 bg-card text-sm"
+          placeholder="Search anything in Siohioma…"
         />
-        <span class="absolute inset-y-0 left-3 grid place-items-center text-muted text-base"
-          >🔎</span
+        <span
+          class="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full border border-border grid place-items-center text-muted"
+          >🔍</span
         >
       </div>
-      <div class="flex items-center gap-3">
-        <RouterLink to="/settings" class="chip">Settings</RouterLink>
-        <button class="btn-primary px-3 py-1" @click="onLogout">Logout</button>
+
+      <!-- Right: actions -->
+      <div class="flex items-center gap-2">
+        <button
+          class="size-10 rounded-full border border-border grid place-items-center bg-card text-muted"
+        >
+          🟢
+        </button>
+        <button
+          class="size-10 rounded-full border border-border grid place-items-center bg-card text-muted"
+        >
+          ⚙️
+        </button>
+        <button
+          class="inline-flex items-center gap-2 rounded-full border border-border bg-card text-heading px-4 h-10"
+        >
+          Add new product <span class="text-heading">＋</span>
+        </button>
       </div>
     </div>
   </header>

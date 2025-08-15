@@ -113,9 +113,15 @@ export default {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <BarChart
         class="lg:col-span-2"
-        title="Lead Type Distribution"
-        :labels="leadType.labels"
-        :data="leadType.data"
+        title="Revenue"
+        :labels="['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']"
+        :datasets="[
+          { label: 'Income', data: [12, 9, 11, 13, 15, 12], color: '#134e4a' },
+          { label: 'Expenses', data: [9, 13, 8, 7, 12, 10], color: '#a3e635' },
+        ]"
+        value-text="$193.000"
+        delta-text="+35% from last month"
+        :delta-positive="true"
       />
       <DonutCard
         title="Total View Performance"
@@ -126,6 +132,9 @@ export default {
           { label: 'Percentage', color: '#16a34a' },
           { label: 'Sales', color: '#f97316' },
         ]"
+        center-label="Total Count"
+        center-value="565K"
+        :percents="[16, 23, 68]"
       />
     </div>
 
