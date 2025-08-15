@@ -5,6 +5,7 @@ import BaseTable from '../../components/ui/BaseTable.vue'
 import BarChart from '../../components/charts/BarChart.vue'
 import DonutChart from '../../components/charts/DonutChart.vue'
 import DonutCard from '../../components/charts/DonutCard.vue'
+import { events } from '../../analytics/posthog'
 import { dashboardApi } from '../../services/dashboardApi'
 
 export default {
@@ -59,6 +60,9 @@ export default {
         this.loadingRecent = false
       }
     },
+    onKpiClick(name) {
+      events.kpi_clicked(name)
+    },
   },
 }
 </script>
@@ -99,14 +103,9 @@ export default {
     </div>
     <!-- KPIs -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <BaseKpi
-        v-for="k in kpis"
-        :key="k.key"
-        :title="k.title"
-        :value="k.value"
-        :delta="k.delta"
-        :icon="k.title[0]"
-      />
+      <button v-for="k in kpis" :key="k.key" class="text-left" @click="onKpiClick(k.title)">
+        <BaseKpi :title="k.title" :value="k.value" :delta="k.delta" :icon="k.title[0]" />
+      </button>
     </div>
 
     <!-- Charts Row -->

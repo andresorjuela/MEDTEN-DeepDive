@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { initPostHog, events } from '../analytics/posthog'
 
 // Lazy-loaded route components
 const LoginPage = () => import('../pages/auth/LoginPage.vue')
@@ -50,6 +51,12 @@ router.beforeEach((to) => {
     }
   }
   return true
+})
+
+// Init analytics and manual page tracking
+initPostHog()
+router.afterEach((to) => {
+  events.page_view(to.fullPath)
 })
 
 export default router
