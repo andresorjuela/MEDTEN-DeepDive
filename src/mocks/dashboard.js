@@ -64,3 +64,44 @@ export function getLostLeads() {
   }))
   return Promise.resolve({ rows })
 }
+
+export function getLiveActions() {
+  // last 10 actions feed
+  const now = new Date('2025-08-15T12:00:00Z')
+  const rows = Array.from({ length: 10 }, (_, i) => ({
+    id: `L-${3500 + i}`,
+    action: ['Viewed product', 'Opened PDF', 'Reached form'][i % 3],
+    when: new Date(now.getTime() - i * 60_000).toISOString(),
+  }))
+  return Promise.resolve({ rows })
+}
+
+export function getSeoKeywords() {
+  const rows = [
+    {
+      keyword: 'ultrasound machine',
+      landingPage: '/products/ultrasound',
+      sessions: 854,
+      inquiries: 42,
+      conversion: 4.9,
+      issue: '',
+    },
+    {
+      keyword: 'ct scanner price',
+      landingPage: '/products/ct',
+      sessions: 623,
+      inquiries: 18,
+      conversion: 2.9,
+      issue: 'Slow LCP',
+    },
+  ]
+  return Promise.resolve({ rows })
+}
+
+export function getPerfIssues() {
+  const rows = [
+    { page: '/products/mri', lcp: 4.8, ttfb: 0.8, dropoffs: 22 },
+    { page: '/products/ct', lcp: 4.2, ttfb: 1.2, dropoffs: 18 },
+  ]
+  return Promise.resolve({ rows })
+}

@@ -7,6 +7,9 @@ import {
   getTopProducts,
   getTopLandingPages,
   getLostLeads,
+  getLiveActions,
+  getSeoKeywords,
+  getPerfIssues,
 } from '../mocks/dashboard'
 
 export const dashboardApi = {
@@ -17,4 +20,7 @@ export const dashboardApi = {
   getTopProducts,
   getTopLandingPages,
   getLostLeads,
+  getLiveActions,
+  getSeoKeywords,
+  getPerfIssues,
 }
