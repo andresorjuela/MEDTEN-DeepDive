@@ -19,13 +19,15 @@ export default {
 </script>
 
 <template>
-  <div class="card p-4 flex items-start gap-3 hover:shadow-[var(--shadow-elevated)] transition">
+  <div
+    class="card p-5 md:p-6 flex items-start gap-3 hover:shadow-[var(--shadow-elevated)] transition"
+  >
     <div class="w-9 h-9 rounded-lg bg-forest-900 text-white grid place-items-center text-sm">
       {{ icon }}
     </div>
     <div class="flex-1 min-w-0">
       <div class="text-sm text-muted">{{ title }}</div>
-      <div class="text-2xl font-semibold text-heading truncate">{{ value }}</div>
+      <div class="text-3xl md:text-4xl font-semibold text-heading truncate">{{ value }}</div>
       <div :class="['text-xs font-medium', deltaColor]">{{ deltaPrefix }}{{ delta }}%</div>
     </div>
   </div>

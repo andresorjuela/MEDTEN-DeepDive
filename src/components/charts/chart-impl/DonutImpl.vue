@@ -23,7 +23,7 @@ export default {
             },
           ],
         },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
+        options: { responsive: true, cutout: '68%', plugins: { legend: { position: 'bottom' } } },
       })
     }
     onMounted(render)

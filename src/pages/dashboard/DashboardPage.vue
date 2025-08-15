@@ -4,11 +4,12 @@ import BaseKpi from '../../components/ui/BaseKpi.vue'
 import BaseTable from '../../components/ui/BaseTable.vue'
 import BarChart from '../../components/charts/BarChart.vue'
 import DonutChart from '../../components/charts/DonutChart.vue'
+import DonutCard from '../../components/charts/DonutCard.vue'
 import { dashboardApi } from '../../services/dashboardApi'
 
 export default {
   name: 'DashboardPage',
-  components: { ReachMapCard, BaseKpi, BaseTable, BarChart, DonutChart },
+  components: { ReachMapCard, BaseKpi, BaseTable, BarChart, DonutChart, DonutCard },
   data() {
     return {
       kpis: [],
@@ -38,10 +39,21 @@ export default {
     dashboardApi.getPerfIssues().then((d) => (this.perfIssues = d.rows))
   },
   methods: {
+    onFiltersChanged: (() => {
+      let id
+      return function () {
+        clearTimeout(id)
+        id = setTimeout(() => this.fetchRecent(1), 300)
+      }
+    })(),
     async fetchRecent(page = 1) {
       this.loadingRecent = true
       try {
-        const res = await dashboardApi.getRecentLeads({ page, limit: this.recent.limit })
+        const res = await dashboardApi.getRecentLeads({
+          page,
+          limit: this.recent.limit,
+          ...this.filters,
+        })
         this.recent = { ...res, page, limit: this.recent.limit }
       } finally {
         this.loadingRecent = false
@@ -58,9 +70,14 @@ export default {
       <input
         placeholder="Date Range"
         v-model="filters.dateRange"
+        @input="onFiltersChanged"
         class="rounded-lg border border-border px-3 py-2"
       />
-      <select v-model="filters.source" class="rounded-lg border border-border px-3 py-2">
+      <select
+        v-model="filters.source"
+        @change="onFiltersChanged"
+        class="rounded-lg border border-border px-3 py-2"
+      >
         <option value="">All Sources</option>
         <option>Organic</option>
         <option>Paid</option>
@@ -70,11 +87,13 @@ export default {
       <input
         placeholder="Brand"
         v-model="filters.brand"
+        @input="onFiltersChanged"
         class="rounded-lg border border-border px-3 py-2"
       />
       <input
         placeholder="Keyword"
         v-model="filters.keyword"
+        @input="onFiltersChanged"
         class="rounded-lg border border-border px-3 py-2"
       />
     </div>
@@ -98,7 +117,16 @@ export default {
         :labels="leadType.labels"
         :data="leadType.data"
       />
-      <DonutChart title="Traffic Source Breakdown" :labels="traffic.labels" :data="traffic.data" />
+      <DonutCard
+        title="Total View Performance"
+        :labels="traffic.labels"
+        :data="traffic.data"
+        :legend="[
+          { label: 'View Count', color: '#a3e635' },
+          { label: 'Percentage', color: '#16a34a' },
+          { label: 'Sales', color: '#f97316' },
+        ]"
+      />
     </div>
 
     <!-- Live Feed -->

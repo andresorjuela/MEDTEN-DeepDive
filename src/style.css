@@ -12,7 +12,7 @@
   --color-card: #ffffff; /* white cards */
   --color-border: #e7ebea; /* subtle card borders */
   --color-heading: #111827; /* slate-900 */
-  --color-muted: #6b7280; /* slate-500 */
+  --color-muted: #52525b; /* slate-600 for stronger contrast */
 
   /* Accents (lime/green + warnings) */
   --color-lime-300: #bef264;

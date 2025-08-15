@@ -5,6 +5,7 @@ const LoginPage = () => import('../pages/auth/LoginPage.vue')
 const DashboardPage = () => import('../pages/dashboard/DashboardPage.vue')
 const LeadsPage = () => import('../pages/leads/LeadsPage.vue')
 const LeadDetailPage = () => import('../pages/leads/LeadDetailPage.vue')
+const SessionPage = () => import('../pages/leads/SessionPage.vue')
 const SeoInsightsPage = () => import('../pages/insights/SeoInsightsPage.vue')
 const ProductInsightsPage = () => import('../pages/insights/ProductInsightsPage.vue')
 const SettingsPage = () => import('../pages/settings/SettingsPage.vue')
@@ -30,6 +31,7 @@ const router = createRouter({
         { path: 'dashboard', name: 'dashboard', component: DashboardPage },
         { path: 'leads', name: 'leads', component: LeadsPage },
         { path: 'leads/:id', name: 'lead-detail', component: LeadDetailPage, props: true },
+        { path: 'sessions/:id', name: 'session', component: SessionPage, props: true },
         { path: 'insights/seo', name: 'seo-insights', component: SeoInsightsPage },
         { path: 'insights/products', name: 'product-insights', component: ProductInsightsPage },
         { path: 'settings', name: 'settings', component: SettingsPage },
