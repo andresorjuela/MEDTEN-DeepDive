@@ -1,34 +1,30 @@
 <script>
+import { useLeadsStore } from '../../stores/leads'
+let debounceId
 export default {
   name: 'LeadsPage',
   data() {
-    return {
-      q: '',
-      leads: [
-        {
-          id: 'L-1021',
-          score: 92,
-          type: 'Demo',
-          viewed: 4,
-          time: '5m',
-          form: true,
-          pdf: true,
-          last: 'Today',
-          status: 'Completed',
-        },
-        {
-          id: 'L-1020',
-          score: 71,
-          type: 'Contact',
-          viewed: 2,
-          time: '3m',
-          form: false,
-          pdf: true,
-          last: '1d',
-          status: 'Pending',
-        },
-      ],
-    }
+    return { q: '' }
+  },
+  computed: {
+    store() {
+      return useLeadsStore()
+    },
+    leads() {
+      return this.store.list
+    },
+  },
+  watch: {
+    q() {
+      clearTimeout(debounceId)
+      debounceId = setTimeout(() => {
+        this.store.setFilters({ q: this.q })
+        this.store.fetchLeads({ page: 1 })
+      }, 300)
+    },
+  },
+  mounted() {
+    this.store.fetchLeads()
   },
 }
 </script>
@@ -73,12 +69,12 @@ export default {
               <span class="badge-success">{{ r.score }}</span>
             </td>
             <td class="py-2">{{ r.type }}</td>
-            <td class="py-2">{{ r.viewed }}</td>
-            <td class="py-2">{{ r.time }}</td>
-            <td class="py-2">{{ r.form ? 'Yes' : 'No' }}</td>
-            <td class="py-2">{{ r.pdf ? 'Yes' : 'No' }}</td>
-            <td class="py-2">{{ r.last }}</td>
-            <td class="py-2">{{ r.status }}</td>
+            <td class="py-2">{{ r.productsViewed }}</td>
+            <td class="py-2">{{ Math.round(r.timeOnSiteSeconds / 60) }}m</td>
+            <td class="py-2">{{ r.reachedInquiryForm ? 'Yes' : 'No' }}</td>
+            <td class="py-2">{{ r.pdfsOpened > 0 ? 'Yes' : 'No' }}</td>
+            <td class="py-2">{{ r.lastSeen }}</td>
+            <td class="py-2">{{ r.lost ? 'Lost' : 'Active' }}</td>
           </tr>
         </tbody>
       </table>

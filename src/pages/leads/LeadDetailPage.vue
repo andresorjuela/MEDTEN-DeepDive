@@ -1,25 +1,21 @@
 <script>
+import { useLeadsStore } from '../../stores/leads'
 export default {
   name: 'LeadDetailPage',
   props: { id: String },
-  data() {
-    return {
-      lead: {
-        id: this.id,
-        score: 92,
-        type: 'Demo',
-        firstSeen: '2025-08-01',
-        lastSeen: '2025-08-15',
-        sessions: 5,
-        source: 'Organic',
-        device: 'Desktop',
-      },
-      timeline: [
-        { t: 'Today', a: 'Viewed product' },
-        { t: 'Yesterday', a: 'Opened PDF' },
-        { t: '2d ago', a: 'Reached form' },
-      ],
-    }
+  computed: {
+    store() {
+      return useLeadsStore()
+    },
+    lead() {
+      return this.store.selectedLead || {}
+    },
+    timeline() {
+      return this.lead.timeline || []
+    },
+  },
+  mounted() {
+    this.store.fetchLeadById(this.id)
   },
 }
 </script>
