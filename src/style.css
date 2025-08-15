@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Brand forest palette (sidebar + brand) */
+  --color-forest-950: #0a1b14;
+  --color-forest-900: #0f261c;
+  --color-forest-800: #173926;
+  --color-forest-700: #1f543b;
+
+  /* Neutrals / Surfaces */
+  --color-surface: #f5f7f6; /* app background */
+  --color-card: #ffffff; /* white cards */
+  --color-border: #e7ebea; /* subtle card borders */
+  --color-heading: #111827; /* slate-900 */
+  --color-muted: #6b7280; /* slate-500 */
+
+  /* Accents (lime/green + warnings) */
+  --color-lime-300: #bef264;
+  --color-lime-400: #a3e635; /* badges + highlights */
+  --color-lime-500: #84cc16;
+
+  --color-green-500: #22c55e; /* success */
+  --color-green-600: #16a34a; /* charts */
+  --color-green-700: #15803d;
+
+  --color-orange-500: #f97316; /* sales */
+
+  /* Chart legend mapping (convenience names) */
+  --color-chart-view: var(--color-lime-400);
+  --color-chart-percentage: var(--color-green-600);
+  --color-chart-sales: var(--color-orange-500);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  /* Shadows */
+  --shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.08);
+  --shadow-elevated: 0 2px 4px rgba(16, 24, 40, 0.06), 0 12px 32px rgba(16, 24, 40, 0.12);
+}
+
+@layer utilities {
+  /* App background surface */
+  .dashboard-surface {
+    @apply bg-surface;
+  }
+
+  /* Reusable card container */
+  .card {
+    @apply bg-card rounded-2xl border border-border shadow-[var(--shadow-soft)];
+  }
+
+  .card-elevated {
+    @apply bg-card rounded-2xl border border-border shadow-[var(--shadow-elevated)];
+  }
+
+  /* Small rounded status chip */
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium bg-surface text-forest-900 border border-border;
+  }
+
+  /* Badges */
+  .badge-success {
+    @apply inline-flex items-center gap-1 rounded-full bg-green-500/10 text-green-700 px-2 py-0.5 text-xs font-medium;
+  }
+  .badge-warning {
+    @apply inline-flex items-center gap-1 rounded-full bg-orange-500/10 text-orange-600 px-2 py-0.5 text-xs font-medium;
+  }
+
+  /* Primary action button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-forest-900 text-white px-5 py-2.5 shadow transition will-change-transform;
+  }
+  .btn-primary:hover {
+    @apply scale-[1.02] shadow-[var(--shadow-elevated)];
+  }
+}
