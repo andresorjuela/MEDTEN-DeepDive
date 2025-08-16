@@ -5,12 +5,13 @@ import BaseTable from '../../components/ui/BaseTable.vue'
 import BarChart from '../../components/charts/BarChart.vue'
 import DonutChart from '../../components/charts/DonutChart.vue'
 import DonutCard from '../../components/charts/DonutCard.vue'
+import FunnelChart from '../../components/charts/FunnelChart.vue'
 import { events } from '../../analytics/posthog'
 import { dashboardApi } from '../../services/dashboardApi'
 
 export default {
   name: 'DashboardPage',
-  components: { ReachMapCard, BaseKpi, BaseTable, BarChart, DonutChart, DonutCard },
+  components: { ReachMapCard, BaseKpi, BaseTable, BarChart, DonutChart, DonutCard, FunnelChart },
   data() {
     return {
       kpis: [],
@@ -25,6 +26,10 @@ export default {
       seoKeywords: [],
       perfIssues: [],
       filters: { dateRange: '', source: '', brand: '', keyword: '' },
+      debugOpen: true,
+      debugQuery:
+        'SELECT event, count() AS c FROM events WHERE timestamp > now() - interval 30 day GROUP BY event ORDER BY c DESC LIMIT 10',
+      debugResponse: null,
     }
   },
   mounted() {
@@ -38,6 +43,7 @@ export default {
     dashboardApi.getLiveActions().then((d) => (this.liveActions = d.rows))
     dashboardApi.getSeoKeywords().then((d) => (this.seoKeywords = d.rows))
     dashboardApi.getPerfIssues().then((d) => (this.perfIssues = d.rows))
+    dashboardApi.getFunnel().then((d) => (this.funnel = d))
   },
   methods: {
     onFiltersChanged: (() => {
@@ -62,6 +68,18 @@ export default {
     },
     onKpiClick(name) {
       events.kpi_clicked(name)
+    },
+    async runDebugQuery() {
+      try {
+        const r = await fetch('/api/posthog-query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: this.debugQuery }),
+        })
+        this.debugResponse = await r.json()
+      } catch (e) {
+        this.debugResponse = { error: String(e && e.message) }
+      }
     },
   },
 }
@@ -136,6 +154,9 @@ export default {
         :percents="[16, 23, 68]"
       />
     </div>
+
+    <!-- Funnel -->
+    <FunnelChart :steps="funnel || []" />
 
     <!-- Live Feed -->
     <div class="card p-4">
@@ -269,6 +290,24 @@ export default {
           <router-link :to="`/leads/${a.id}`" class="btn-primary px-3 py-1">View Lead</router-link>
         </li>
       </ul>
+    </div>
+
+    <!-- Debug: Raw PostHog data playground (toggle with debugOpen) -->
+    <div class="card p-4" v-if="debugOpen">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-medium">Raw PostHog Query (HogQL)</div>
+        <button class="chip" @click="debugOpen = false">Hide</button>
+      </div>
+      <textarea
+        v-model="debugQuery"
+        rows="4"
+        class="w-full rounded-lg border border-border p-2 font-mono text-sm"
+      ></textarea>
+      <div class="mt-2 flex items-center gap-2">
+        <button class="btn-primary px-3 py-1" @click="runDebugQuery">Run</button>
+        <span class="text-xs text-muted">Preview raw JSON below</span>
+      </div>
+      <pre class="mt-3 bg-surface rounded-lg p-3 overflow-auto text-xs">{{ debugResponse }}</pre>
     </div>
   </div>
 </template>
