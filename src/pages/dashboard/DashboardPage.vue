@@ -1,9 +1,9 @@
 <script>
-import ReachMapCard from '../../components/insights/ReachMapCard.vue'
+// import ReachMapCard from '../../components/insights/ReachMapCard.vue'
 import BaseKpi from '../../components/ui/BaseKpi.vue'
 import BaseTable from '../../components/ui/BaseTable.vue'
 import BarChart from '../../components/charts/BarChart.vue'
-import DonutChart from '../../components/charts/DonutChart.vue'
+// import DonutChart from '../../components/charts/DonutChart.vue'
 import DonutCard from '../../components/charts/DonutCard.vue'
 import FunnelChart from '../../components/charts/FunnelChart.vue'
 import { events } from '../../analytics/posthog'
@@ -11,10 +11,11 @@ import { dashboardApi } from '../../services/dashboardApi'
 
 export default {
   name: 'DashboardPage',
-  components: { ReachMapCard, BaseKpi, BaseTable, BarChart, DonutChart, DonutCard, FunnelChart },
+  components: { BaseKpi, BaseTable, BarChart, DonutCard, FunnelChart },
   data() {
     return {
       kpis: [],
+      range: '30d',
       leadType: { labels: [], data: [] },
       traffic: { labels: [], data: [] },
       recent: { items: [], total: 0, page: 1, limit: 10 },
@@ -33,7 +34,7 @@ export default {
     }
   },
   mounted() {
-    dashboardApi.getDashboardKPIs().then((d) => (this.kpis = d))
+    this.loadKpis()
     dashboardApi.getLeadTypeDistribution().then((d) => (this.leadType = d))
     dashboardApi.getTrafficSourceBreakdown().then((d) => (this.traffic = d))
     this.fetchRecent()
@@ -46,6 +47,9 @@ export default {
     dashboardApi.getFunnel().then((d) => (this.funnel = d))
   },
   methods: {
+    async loadKpis() {
+      this.kpis = await dashboardApi.getDashboardKPIs({ range: this.range })
+    },
     onFiltersChanged: (() => {
       let id
       return function () {
@@ -119,6 +123,28 @@ export default {
         class="rounded-lg border border-border px-3 py-2"
       />
     </div>
+    <!-- Range control + KPIs -->
+    <div class="flex items-center justify-end">
+      <label class="text-sm text-muted mr-2">Range</label>
+      <select
+        v-model="range"
+        @change="loadKpis"
+        class="rounded-lg border border-border px-3 py-2 min-w-[180px]"
+      >
+        <option value="24h">Last 24 hours</option>
+        <option value="7d">Last 7 days</option>
+        <option value="14d">Last 14 days</option>
+        <option value="30d">Last 30 days</option>
+        <option value="90d">Last 90 days</option>
+        <option value="180d">Last 180 days</option>
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="month">This month</option>
+        <option value="ytd">Year to date</option>
+        <option value="all">All time</option>
+      </select>
+    </div>
+
     <!-- KPIs -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <button v-for="k in kpis" :key="k.key" class="text-left" @click="onKpiClick(k.title)">

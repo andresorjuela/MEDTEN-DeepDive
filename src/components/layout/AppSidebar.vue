@@ -10,7 +10,7 @@ export default { name: 'AppSidebar' }
       <div class="w-9 h-9 rounded-lg bg-white text-forest-900 grid place-items-center font-bold">
         M
       </div>
-      <div class="font-semibold">MEDTEN</div>
+      <div class="font-semibold">Medten DeepDive</div>
     </div>
     <div class="px-4 pt-4 pb-2 text-xs tracking-[0.15em] text-white/60">MENU</div>
     <nav class="px-2 space-y-1 text-sm">

@@ -29,7 +29,7 @@ export default {
       <div class="relative flex-1 max-w-2xl">
         <input
           class="w-full rounded-full border border-border pl-5 pr-12 h-10 bg-card text-sm"
-          placeholder="Search anything in Siohioma…"
+          placeholder="Search anything in DeepDive..."
         />
         <span
           class="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full border border-border grid place-items-center text-muted"

@@ -14,6 +14,27 @@ import {
 
 const USE_LIVE = String(import.meta.env.VITE_MOCK_MODE || '').toLowerCase() === 'false'
 
+function dateWhere(opts = {}) {
+  const range = opts.range || '30d'
+  if (range === 'today') return `toDate(timestamp) = today()`
+  if (range === 'yesterday') return `toDate(timestamp) = yesterday()`
+  if (range === '24h') return `timestamp > now() - interval 24 hour`
+  if (range === '7d') return `timestamp > now() - interval 7 day`
+  if (range === '14d') return `timestamp > now() - interval 14 day`
+  if (range === '30d') return `timestamp > now() - interval 30 day`
+  if (range === '90d') return `timestamp > now() - interval 90 day`
+  if (range === '180d') return `timestamp > now() - interval 180 day`
+  if (range === 'month') return `toStartOfMonth(timestamp) = toStartOfMonth(now())`
+  if (range === 'ytd') return `timestamp >= toStartOfYear(now())`
+  if (range === 'all') return '1 = 1'
+  if (range === 'lastNDays') {
+    const n = Math.max(1, Math.min(365, Number(opts.lastDays || 7)))
+    return `timestamp > now() - interval ${n} day`
+  }
+  // default
+  return `timestamp > now() - interval 30 day`
+}
+
 async function query(hogql) {
   const r = await fetch('/api/posthog-query', {
     method: 'POST',
@@ -25,14 +46,14 @@ async function query(hogql) {
 }
 
 // Live adapters (shape responses the same way as mocks)
-async function liveGetDashboardKPIs() {
+async function liveGetDashboardKPIs(opts = {}) {
   // Temporary mapping per your current events (will switch when you add real inquiry events)
   // Base population ("Total Inquiries" per your definition): users who visited landing OR product page
   const base = await query(`
     SELECT count(DISTINCT distinct_id)
     FROM events
-    WHERE timestamp > now() - interval 30 day
-      AND event IN ('LANDING_PAGE_VIEW','product_page_viewed','Pageview')
+    WHERE ${dateWhere(opts)}
+      AND event IN ('LANDING_PAGE_VIEW','$pageview','page_view','Pageview','product_page_viewed')
   `)
   const baseCount = Number(base?.results?.[0]?.[0] ?? 0)
 
@@ -40,8 +61,8 @@ async function liveGetDashboardKPIs() {
   const visitsQ = await query(`
     SELECT count()
     FROM events
-    WHERE timestamp > now() - interval 30 day
-      AND event = ('LANDING_PAGE_VIEW')
+    WHERE ${dateWhere(opts)}
+      AND event IN ('LANDING_PAGE_VIEW','$pageview','page_view','Pageview')
   `)
   const visits = Number(visitsQ?.results?.[0]?.[0] ?? 0)
 
@@ -49,7 +70,7 @@ async function liveGetDashboardKPIs() {
   const conv = await query(`
     SELECT count(DISTINCT distinct_id)
     FROM events
-    WHERE timestamp > now() - interval 30 day
+    WHERE ${dateWhere(opts)}
       AND event IN ('LOGIN_SUCCESS')
   `)
   const converters = Number(conv?.results?.[0]?.[0] ?? 0)
@@ -61,7 +82,7 @@ async function liveGetDashboardKPIs() {
   const hotQ = await query(`
     SELECT count(DISTINCT distinct_id)
     FROM events
-    WHERE timestamp > now() - interval 30 day AND event IN ('product_page_viewed','LOGIN_SUCCESS')
+    WHERE ${dateWhere(opts)} AND event IN ('product_page_viewed','LOGIN_SUCCESS')
   `)
   const hot = Number(hotQ?.results?.[0]?.[0] ?? 0)
 
