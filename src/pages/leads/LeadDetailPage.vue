@@ -1,21 +1,30 @@
 <script>
 import { useLeadsStore } from '../../stores/leads'
+import { dashboardApi } from '../../services/dashboardApi'
 export default {
   name: 'LeadDetailPage',
   props: { id: String },
+  data() {
+    return { visitor: null }
+  },
   computed: {
     store() {
       return useLeadsStore()
     },
     lead() {
-      return this.store.selectedLead || {}
+      return this.visitor || this.store.selectedLead || {}
     },
     timeline() {
       return this.lead.timeline || []
     },
   },
-  mounted() {
-    this.store.fetchLeadById(this.id)
+  async mounted() {
+    // Try live visitor detail; fall back to mock store
+    try {
+      this.visitor = await dashboardApi.getVisitorDetail(this.id)
+    } catch (e) {
+      this.store.fetchLeadById(this.id)
+    }
   },
 }
 </script>

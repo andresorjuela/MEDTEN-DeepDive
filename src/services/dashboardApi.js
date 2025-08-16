@@ -288,4 +288,149 @@ export const dashboardApi = {
         { step: 'Form Start', count: 20 },
         { step: 'Form Submit', count: 10 },
       ],
+  // Live visitor detail helper (mock fallback can be wired later if needed)
+  async getVisitorDetail(id) {
+    if (!USE_LIVE) {
+      // Lightweight compatibility: reuse recent lead generator when in mock mode
+      const { getLeadById } = await import('../mocks/handlers')
+      return getLeadById(id)
+    }
+    // Summary block
+    const summary = await query(`
+      SELECT
+        min(timestamp) AS first_seen,
+        max(timestamp) AS last_seen,
+        any(properties.$browser) AS browser,
+        any(properties.$os) AS os,
+        any(coalesce(properties.$initial_utm_source, properties.utm_source, properties.$referrer)) AS source,
+        countDistinct(toDate(timestamp)) AS sessions
+      FROM events
+      WHERE distinct_id = '${id}'
+        AND timestamp > now() - interval 180 day
+    `)
+    const s = summary?.results?.[0] || []
+    const firstSeen = s[0]
+    const lastSeen = s[1]
+    const device = [s[2], s[3]].filter(Boolean).join(' / ')
+    const source = s[4] || ''
+    const sessions = Number(s[5] || 0)
+
+    // Activity counters for quick score/type
+    const counts = await query(`
+      SELECT
+        sumIf(1, event='product_viewed') AS pv,
+        sumIf(1, event='pdf_opened') AS pdf,
+        sumIf(1, event='reached_inquiry_form') AS rif
+      FROM events
+      WHERE distinct_id='${id}' AND timestamp > now() - interval 30 day
+    `)
+    const cRow = counts?.results?.[0] || []
+    const pv = Number(cRow[0] || 0)
+    const pdf = Number(cRow[1] || 0)
+    const rif = Number(cRow[2] || 0)
+    const score = Math.min(10, pv * 2 + pdf * 3 + (rif > 0 ? 4 : 0))
+    const type = rif > 0 ? 'Hot' : pdf > 0 ? 'Warm' : pv > 0 ? 'Cold' : 'Disengaged'
+
+    // Timeline (last 50 events)
+    const tl = await query(`
+      SELECT formatDateTime(timestamp, '%Y-%m-%d %H:%M:%S') as t, event
+      FROM events
+      WHERE distinct_id='${id}'
+      ORDER BY timestamp DESC
+      LIMIT 50
+    `)
+    const timeline = (tl?.results?.[0] || []).map((r) => ({ t: r[0], a: r[1] }))
+
+    return { id, type, score, firstSeen, lastSeen, sessions, source, device, timeline }
+  },
+  async getTopSearchTerms() {
+    if (!USE_LIVE) {
+      // Minimal mock: return empty list in mock mode
+      return { rows: [] }
+    }
+    const res = await query(`
+      SELECT
+        coalesce(
+          properties.$search_term,
+          properties.search_term,
+          properties.searchTerm,
+          properties.term,
+          properties.query,
+          properties.q,
+          properties.keyword,
+          properties.keywords,
+          properties.value
+        ) AS term,
+        count() AS c
+      FROM events
+      WHERE timestamp > now() - interval 30 day
+        AND (lower(event) LIKE '%search%' OR event IN ('site_search','search','search_performed','product_search','product_searched'))
+      GROUP BY term
+      HAVING term IS NOT NULL AND term != ''
+      ORDER BY c DESC
+      LIMIT 50
+    `)
+    const rows = (res?.results || []).map((r) => ({ term: r[0], count: r[1] }))
+    return { rows }
+  },
+  async getSearchTermDetail(term) {
+    if (!USE_LIVE) {
+      return { total: 0, trend: { labels: [], data: [] }, topPages: [], recent: [] }
+    }
+    const filter = `coalesce(properties.$search_term, properties.search_term, properties.searchTerm, properties.term, properties.query, properties.q, properties.keyword, properties.keywords, properties.value)`
+
+    // Total
+    const totalQ = await query(`
+      SELECT count()
+      FROM events
+      WHERE timestamp > now() - interval 30 day
+        AND (lower(event) LIKE '%search%' OR event IN ('site_search','search','search_performed','product_search','product_searched'))
+        AND ${filter} = '${term.replaceAll("'", "\\'")}'
+    `)
+    const total = Number(totalQ?.results?.[0]?.[0] ?? 0)
+
+    // Trend by day
+    const trendQ = await query(`
+      SELECT toDate(timestamp) AS d, count() AS c
+      FROM events
+      WHERE timestamp > now() - interval 30 day
+        AND (lower(event) LIKE '%search%' OR event IN ('site_search','search','search_performed','product_search','product_searched'))
+        AND ${filter} = '${term.replaceAll("'", "\\'")}'
+      GROUP BY d
+      ORDER BY d
+    `)
+    const trendLabels = []
+    const trendData = []
+    for (const r of trendQ?.results || []) {
+      trendLabels.push(r[0])
+      trendData.push(r[1])
+    }
+
+    // Top landing pages for this term
+    const pagesQ = await query(`
+      SELECT properties.$current_url AS page, count() AS c
+      FROM events
+      WHERE timestamp > now() - interval 30 day
+        AND (lower(event) LIKE '%search%' OR event IN ('site_search','search','search_performed','product_search','product_searched'))
+        AND ${filter} = '${term.replaceAll("'", "\\'")}'
+      GROUP BY page
+      ORDER BY c DESC
+      LIMIT 20
+    `)
+    const topPages = (pagesQ?.results || []).map((r) => ({ page: r[0], count: r[1] }))
+
+    // Recent matching events
+    const recentQ = await query(`
+      SELECT formatDateTime(timestamp, '%Y-%m-%d %H:%M:%S') AS t, distinct_id
+      FROM events
+      WHERE timestamp > now() - interval 30 day
+        AND (lower(event) LIKE '%search%' OR event IN ('site_search','search','search_performed','product_search','product_searched'))
+        AND ${filter} = '${term.replaceAll("'", "\\'")}'
+      ORDER BY timestamp DESC
+      LIMIT 30
+    `)
+    const recent = (recentQ?.results || []).map((r) => ({ t: r[0], id: r[1] }))
+
+    return { total, trend: { labels: trendLabels, data: trendData }, topPages, recent }
+  },
 }

@@ -9,6 +9,8 @@ const LeadDetailPage = () => import('../pages/leads/LeadDetailPage.vue')
 const SessionPage = () => import('../pages/leads/SessionPage.vue')
 const SeoInsightsPage = () => import('../pages/insights/SeoInsightsPage.vue')
 const ProductInsightsPage = () => import('../pages/insights/ProductInsightsPage.vue')
+const SearchInsightsPage = () => import('../pages/insights/SearchInsightsPage.vue')
+const SearchTermDetailPage = () => import('../pages/insights/SearchTermDetailPage.vue')
 const SettingsPage = () => import('../pages/settings/SettingsPage.vue')
 const AppShell = () => import('../components/layout/AppShell.vue')
 
@@ -34,6 +36,13 @@ const router = createRouter({
         { path: 'leads/:id', name: 'lead-detail', component: LeadDetailPage, props: true },
         { path: 'sessions/:id', name: 'session', component: SessionPage, props: true },
         { path: 'insights/seo', name: 'seo-insights', component: SeoInsightsPage },
+        { path: 'insights/search', name: 'search-insights', component: SearchInsightsPage },
+        {
+          path: 'insights/search/:term',
+          name: 'search-term',
+          component: SearchTermDetailPage,
+          props: true,
+        },
         { path: 'insights/products', name: 'product-insights', component: ProductInsightsPage },
         { path: 'settings', name: 'settings', component: SettingsPage },
       ],
