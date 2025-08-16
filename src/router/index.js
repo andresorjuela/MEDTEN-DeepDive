@@ -11,6 +11,7 @@ const SeoInsightsPage = () => import('../pages/insights/SeoInsightsPage.vue')
 const ProductInsightsPage = () => import('../pages/insights/ProductInsightsPage.vue')
 const SearchInsightsPage = () => import('../pages/insights/SearchInsightsPage.vue')
 const SearchTermDetailPage = () => import('../pages/insights/SearchTermDetailPage.vue')
+const PathsInsightsPage = () => import('../pages/insights/PathsInsightsPage.vue')
 const SettingsPage = () => import('../pages/settings/SettingsPage.vue')
 const AppShell = () => import('../components/layout/AppShell.vue')
 
@@ -43,6 +44,7 @@ const router = createRouter({
           component: SearchTermDetailPage,
           props: true,
         },
+        { path: 'insights/paths', name: 'paths-insights', component: PathsInsightsPage },
         { path: 'insights/products', name: 'product-insights', component: ProductInsightsPage },
         { path: 'settings', name: 'settings', component: SettingsPage },
       ],

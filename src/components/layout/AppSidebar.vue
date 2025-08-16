@@ -119,6 +119,23 @@ export default { name: 'AppSidebar' }
         <span>Search</span>
       </router-link>
 
+      <router-link
+        to="/insights/paths"
+        class="flex items-center gap-3 px-3 py-2 rounded-lg transition text-white/80 hover:bg-white/10"
+        active-class="bg-white/10 text-white"
+      >
+        <svg
+          class="w-5 h-5 text-white/80"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          viewBox="0 0 24 24"
+        >
+          <path d="M3 5h18M3 12h12M3 19h6" />
+        </svg>
+        <span>Paths</span>
+      </router-link>
+
       <RouterLink to="/leads" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"

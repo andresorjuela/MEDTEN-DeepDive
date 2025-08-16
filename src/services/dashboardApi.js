@@ -433,4 +433,29 @@ export const dashboardApi = {
 
     return { total, trend: { labels: trendLabels, data: trendData }, topPages, recent }
   },
+  async getTopPaths() {
+    if (!USE_LIVE) {
+      return { rows: [] }
+    }
+    const res = await query(`
+      SELECT
+        replaceRegexpOne(ifNull(properties.$current_url, properties.url), '^https?://[^/]+', '') AS path,
+        count() AS views,
+        count(DISTINCT distinct_id) AS visitors
+      FROM events
+      WHERE timestamp > now() - interval 30 day
+        AND event IN ('LANDING_PAGE_VIEW', '$pageview', 'page_view', 'Pageview')
+      GROUP BY path
+      ORDER BY views DESC
+      LIMIT 100
+    `)
+    const arr = res?.results || res?.results?.[0]?.results || []
+    const rows = arr.map((r) => ({
+      path: r[0] || '/',
+      views: r[1] || 0,
+      visitors: r[2] || 0,
+      bounceRate: 0,
+    }))
+    return { rows }
+  },
 }
