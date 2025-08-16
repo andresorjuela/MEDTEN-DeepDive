@@ -1,6 +1,8 @@
 <script>
 // import ReachMapCard from '../../components/insights/ReachMapCard.vue'
+import { defineAsyncComponent } from 'vue'
 import BaseKpi from '../../components/ui/BaseKpi.vue'
+const BaseSkeleton = defineAsyncComponent(() => import('../../components/ui/BaseSkeleton.vue'))
 import BaseTable from '../../components/ui/BaseTable.vue'
 import BarChart from '../../components/charts/BarChart.vue'
 // import DonutChart from '../../components/charts/DonutChart.vue'
@@ -11,11 +13,12 @@ import { dashboardApi } from '../../services/dashboardApi'
 
 export default {
   name: 'DashboardPage',
-  components: { BaseKpi, BaseTable, BarChart, DonutCard, FunnelChart },
+  components: { BaseKpi, BaseTable, BarChart, DonutCard, FunnelChart, BaseSkeleton },
   data() {
     return {
       kpis: [],
-      range: '30d',
+      range: '7d',
+      loadingKpis: false,
       leadType: { labels: [], data: [] },
       traffic: { labels: [], data: [] },
       recent: { items: [], total: 0, page: 1, limit: 10 },
@@ -48,7 +51,12 @@ export default {
   },
   methods: {
     async loadKpis() {
-      this.kpis = await dashboardApi.getDashboardKPIs({ range: this.range })
+      this.loadingKpis = true
+      try {
+        this.kpis = await dashboardApi.getDashboardKPIs({ range: this.range })
+      } finally {
+        this.loadingKpis = false
+      }
     },
     onFiltersChanged: (() => {
       let id
@@ -147,9 +155,17 @@ export default {
 
     <!-- KPIs -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <button v-for="k in kpis" :key="k.key" class="text-left" @click="onKpiClick(k.title)">
-        <BaseKpi :title="k.title" :value="k.value" :delta="k.delta" :icon="k.title[0]" />
-      </button>
+      <template v-if="loadingKpis">
+        <div class="card p-5"><BaseSkeleton :lines="3" /></div>
+        <div class="card p-5"><BaseSkeleton :lines="3" /></div>
+        <div class="card p-5"><BaseSkeleton :lines="3" /></div>
+        <div class="card p-5"><BaseSkeleton :lines="3" /></div>
+      </template>
+      <template v-else>
+        <button v-for="k in kpis" :key="k.key" class="text-left" @click="onKpiClick(k.title)">
+          <BaseKpi :title="k.title" :value="k.value" :delta="k.delta" :icon="k.title[0]" />
+        </button>
+      </template>
     </div>
 
     <!-- Charts Row -->
