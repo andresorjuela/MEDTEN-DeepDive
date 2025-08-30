@@ -1,7 +1,12 @@
 <script>
-import { useAuthStore } from '../../stores/auth'
+import { createClient } from '@supabase/supabase-js'
 import Lottie from 'lottie-web'
 import animationData from '../../../Discover.json'
+
+const supabaseUrl = 'https://weahzmsmhxextohossfp.supabase.co'
+const supabaseKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlYWh6bXNtaHhleHRvaG9zc2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NjM4NDAsImV4cCI6MjA3MjEzOTg0MH0.Ack4J88Wfx3QniM1YMyIaIvFZ5P1_XTWC-bovwdYJm8'
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default {
   name: 'LoginPage',
@@ -10,10 +15,17 @@ export default {
       mode: 'signin',
       email: '',
       password: '',
-      remember: false,
       loading: false,
       error: '',
     }
+  },
+  computed: {
+    isValid() {
+      return /.+@.+\..+/.test(this.email) && this.password.length >= 6
+    },
+    emailValid() {
+      return this.email.length > 0 && /.+@.+\..+/.test(this.email)
+    },
   },
   mounted() {
     Lottie.loadAnimation({
@@ -24,26 +36,29 @@ export default {
       animationData: animationData,
     })
   },
-  computed: {
-    isValid() {
-      return /.+@.+\..+/.test(this.email) && this.password.length >= 6
-    },
-    emailValid() {
-      return this.email.length > 0 && /.+@.+\..+/.test(this.email)
-    },
-  },
   methods: {
     async onSubmit() {
       if (!this.isValid || this.loading) return
       this.error = ''
       this.loading = true
+      console.log('Attempting to log in with:', this.email)
       try {
-        const auth = useAuthStore()
-        await auth.login({ email: this.email, password: this.password, remember: this.remember })
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: this.email,
+          password: this.password,
+        })
+        if (error) {
+          console.error('Login error:', error)
+          throw error
+        }
+        localStorage.setItem('token', data.session.access_token)
+        console.log('Login successful')
         const redirect = this.$route.query.redirect || '/dashboard'
+        console.log('Redirecting to:', redirect)
         this.$router.replace(redirect)
-      } catch {
-        this.error = 'Invalid email or password'
+      } catch (error) {
+        console.error('Error during login:', error)
+        this.error = error.message || 'Login failed'
       } finally {
         this.loading = false
       }

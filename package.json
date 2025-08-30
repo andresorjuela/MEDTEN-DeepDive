@@ -16,6 +16,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.56.1",
     "@tailwindcss/postcss": "^4.1.12",
     "axios": "^1.7.7",
     "chart.js": "^4.5.0",
