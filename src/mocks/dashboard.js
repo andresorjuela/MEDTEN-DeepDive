@@ -105,3 +105,25 @@ export function getPerfIssues() {
   ]
   return Promise.resolve({ rows })
 }
+
+// Mock: Top search terms (used when live PostHog is unavailable)
+export function getTopSearchTermsMock() {
+  const rows = [
+    { term: 'ultrasound machine', count: 143 },
+    { term: 'ct scanner', count: 98 },
+    { term: 'mri price', count: 76 },
+    { term: 'xray portable', count: 55 },
+    { term: 'ecg device', count: 41 },
+  ]
+  return Promise.resolve({ rows })
+}
+
+// Mock: Top paths (basic site paths list)
+export function getTopPathsMock() {
+  const rows = [
+    { path: '/', views: 1234, visitors: 890, bounceRate: 42 },
+    { path: '/products', views: 984, visitors: 712, bounceRate: 38 },
+    { path: '/products/ultrasound', views: 643, visitors: 512, bounceRate: 33 },
+  ]
+  return Promise.resolve({ rows })
+}

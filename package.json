@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:live": "concurrently -k \"node -r dotenv/config server/posthog-dev.js\" \"VITE_MOCK_MODE=false vite\"",
     "posthog:dev": "node server/posthog-dev.js",
     "build": "vite build",
     "preview": "vite preview",
@@ -33,6 +34,8 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.1",
     "eslint": "^9.31.0",
     "eslint-plugin-vue": "~10.3.0",
     "globals": "^16.3.0",

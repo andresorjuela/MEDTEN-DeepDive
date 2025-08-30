@@ -16,11 +16,10 @@ export default async function handler(req, res) {
     const pid = process.env.POSTHOG_PROJECT_ID
     const key = process.env.POSTHOG_PERSONAL_API_KEY
     if (!key || !pid) {
-      res
-        .status(500)
-        .json({
-          error: 'Server not configured: set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID',
-        })
+      console.error('Missing POSTHOG_PERSONAL_API_KEY or POSTHOG_PROJECT_ID')
+      res.status(500).json({
+        error: 'Server not configured: set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID',
+      })
       return
     }
     const r = await fetch(`${host}/api/projects/${pid}/query/`, {
@@ -35,6 +34,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 's-maxage=60')
     res.status(r.ok ? 200 : 500).json(data)
   } catch (e) {
+    console.error('Error in PostHog query:', e)
     res.status(500).json({ error: String((e && e.message) || e) })
   }
 }

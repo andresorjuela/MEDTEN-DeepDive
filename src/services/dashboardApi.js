@@ -10,8 +10,12 @@ import {
   getLiveActions,
   getSeoKeywords,
   getPerfIssues,
+  getTopSearchTermsMock,
+  getTopPathsMock,
 } from '../mocks/dashboard'
 
+// If VITE_MOCK_MODE is not explicitly set to 'false', default to mock mode to avoid
+// breaking pages when PostHog credentials/proxy are not running locally.
 const USE_LIVE = String(import.meta.env.VITE_MOCK_MODE || '').toLowerCase() === 'false'
 
 function dateWhere(opts = {}) {
@@ -366,8 +370,7 @@ export const dashboardApi = {
   },
   async getTopSearchTerms() {
     if (!USE_LIVE) {
-      // Minimal mock: return empty list in mock mode
-      return { rows: [] }
+      return getTopSearchTermsMock()
     }
     const res = await query(`
       SELECT
@@ -456,7 +459,7 @@ export const dashboardApi = {
   },
   async getTopPaths() {
     if (!USE_LIVE) {
-      return { rows: [] }
+      return getTopPathsMock()
     }
     const res = await query(`
       SELECT

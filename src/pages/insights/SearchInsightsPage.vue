@@ -9,6 +9,9 @@ export default {
     try {
       const { rows } = await dashboardApi.getTopSearchTerms()
       this.rows = rows
+      console.log('Fetched rows:', this.rows)
+    } catch (error) {
+      console.error('Error fetching search terms:', error)
     } finally {
       this.loading = false
     }
