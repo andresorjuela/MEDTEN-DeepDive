@@ -1,5 +1,7 @@
 <script>
 import { useAuthStore } from '../../stores/auth'
+import Lottie from 'lottie-web'
+import animationData from '../../../Discover.json'
 
 export default {
   name: 'LoginPage',
@@ -12,6 +14,15 @@ export default {
       loading: false,
       error: '',
     }
+  },
+  mounted() {
+    Lottie.loadAnimation({
+      container: this.$refs.lottieContainer,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      animationData: animationData,
+    })
   },
   computed: {
     isValid() {
@@ -31,7 +42,7 @@ export default {
         await auth.login({ email: this.email, password: this.password, remember: this.remember })
         const redirect = this.$route.query.redirect || '/dashboard'
         this.$router.replace(redirect)
-      } catch (e) {
+      } catch {
         this.error = 'Invalid email or password'
       } finally {
         this.loading = false
@@ -49,23 +60,11 @@ export default {
         <!-- Brand -->
         <div class="flex items-center gap-3 mb-8">
           <div class="w-9 h-9 rounded-lg bg-forest-900 text-white grid place-items-center">M</div>
-          <div class="font-semibold">MEDTEN DeepDive</div>
+          <div class="font-semibold">Medten DeepDive</div>
         </div>
 
         <h1 class="text-3xl font-semibold text-heading">Welcome Back</h1>
         <p class="text-sm text-muted mb-6">Please enter your details</p>
-
-        <!-- Tabs -->
-        <div class="grid grid-cols-2 rounded-xl border border-border bg-card p-1 mb-5">
-          <button
-            class="py-2 rounded-lg transition"
-            :class="mode === 'signin' ? 'bg-forest-900 text-white' : 'text-muted'"
-            @click="mode = 'signin'"
-          >
-            Sign In
-          </button>
-          <button class="py-2 rounded-lg text-muted" @click="mode = 'signup'">Signup</button>
-        </div>
 
         <form @submit.prevent="onSubmit" class="space-y-4">
           <!-- Email field with prefix/suffix icons -->
@@ -113,46 +112,12 @@ export default {
             </p>
           </div>
 
-          <label class="inline-flex items-center gap-2 text-sm text-muted">
-            <input v-model="remember" type="checkbox" class="rounded" />
-            Remember me
-          </label>
-
           <button
             :disabled="!isValid || loading"
             class="btn-primary w-full disabled:opacity-50 disabled:pointer-events-none"
           >
-            {{ loading ? 'Signing in...' : 'Continue' }}
+            {{ loading ? 'Signing in...' : 'Login' }}
           </button>
-
-          <div class="relative my-4">
-            <div class="h-px bg-border"></div>
-            <span
-              class="absolute -top-3 left-1/2 -translate-x-1/2 bg-surface px-3 text-xs text-muted"
-              >Or Continue With</span
-            >
-          </div>
-
-          <div class="flex items-center gap-3 justify-center">
-            <button
-              type="button"
-              class="size-11 rounded-full border border-border grid place-items-center bg-card"
-            >
-              G
-            </button>
-            <button
-              type="button"
-              class="size-11 rounded-full border border-border grid place-items-center bg-card"
-            >
-              
-            </button>
-            <button
-              type="button"
-              class="size-11 rounded-full border border-border grid place-items-center bg-card"
-            >
-              f
-            </button>
-          </div>
 
           <p v-if="error" class="text-sm text-orange-600">{{ error }}</p>
         </form>
@@ -161,17 +126,10 @@ export default {
 
     <!-- Right: hero visual -->
     <div class="hidden lg:block p-6 lg:p-12">
-      <div
-        class="h-full w-full rounded-2xl bg-gradient-to-br from-lime-300 to-forest-700 relative overflow-hidden"
-      >
-        <div
-          class="absolute inset-0 backdrop-blur-sm opacity-30 bg-[repeating-linear-gradient(0deg,_transparent,_transparent_36px,_rgba(255,255,255,0.4)_36px,_rgba(255,255,255,0.4)_40px)]"
-        ></div>
+      <div class="h-full w-full rounded-2xl bg-white relative overflow-hidden">
         <div class="absolute inset-0 grid place-items-center">
-          <div
-            class="size-56 rounded-2xl bg-gradient-to-br from-forest-800 to-forest-900 shadow-2xl grid place-items-center text-white text-6xl"
-          >
-            🔒
+          <div ref="lottieContainer" class="w-full h-full">
+            <!-- Lottie animation will be rendered here -->
           </div>
         </div>
       </div>

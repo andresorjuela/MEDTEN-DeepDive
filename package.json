@@ -19,6 +19,7 @@
     "@tailwindcss/postcss": "^4.1.12",
     "axios": "^1.7.7",
     "chart.js": "^4.5.0",
+    "lottie-web": "^5.13.0",
     "pinia": "^3.0.3",
     "posthog-js": "^1.260.1",
     "vue": "^3.5.18",
