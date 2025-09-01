@@ -1,6 +1,7 @@
 <script>
 // import ReachMapCard from '../../components/insights/ReachMapCard.vue'
 import { defineAsyncComponent } from 'vue'
+import api from '../../services/api'
 import BaseKpi from '../../components/ui/BaseKpi.vue'
 const BaseSkeleton = defineAsyncComponent(() => import('../../components/ui/BaseSkeleton.vue'))
 import BaseTable from '../../components/ui/BaseTable.vue'
@@ -83,12 +84,10 @@ export default {
     },
     async runDebugQuery() {
       try {
-        const r = await fetch('/api/posthog-query', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: this.debugQuery }),
+        const r = await api.post('', {
+          query: this.debugQuery,
         })
-        this.debugResponse = await r.json()
+        this.debugResponse = r.data
       } catch (e) {
         this.debugResponse = { error: String(e && e.message) }
       }

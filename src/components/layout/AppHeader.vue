@@ -40,19 +40,10 @@ export default {
       <!-- Right: actions -->
       <div class="flex items-center gap-2">
         <button
-          class="size-10 rounded-full border border-border grid place-items-center bg-card text-muted"
-        >
-          🟢
-        </button>
-        <button
-          class="size-10 rounded-full border border-border grid place-items-center bg-card text-muted"
-        >
-          ⚙️
-        </button>
-        <button
+          @click="onLogout"
           class="inline-flex items-center gap-2 rounded-full border border-border bg-card text-heading px-4 h-10"
         >
-          Add new product <span class="text-heading">＋</span>
+          Logout
         </button>
       </div>
     </div>

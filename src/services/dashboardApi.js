@@ -1,4 +1,5 @@
 // Dashboard API facade (mock or live PostHog via serverless proxy)
+import api from './api'
 import {
   getDashboardKPIs,
   getLeadTypeDistribution,
@@ -40,13 +41,11 @@ function dateWhere(opts = {}) {
 }
 
 async function query(hogql) {
-  const r = await fetch('/api/posthog-query', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: hogql }),
+  const r = await api.post('', {
+    query: hogql,
   })
   if (!r.ok) throw new Error('PostHog query failed')
-  return r.json()
+  return r.data
 }
 
 // Live adapters (shape responses the same way as mocks)
