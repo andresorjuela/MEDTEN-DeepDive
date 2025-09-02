@@ -1,4 +1,3 @@
-
 // src/services/dashboardApi.js
 // Dashboard API facade (mock or live PostHog via serverless proxy)
 import api from './api'
@@ -122,7 +121,10 @@ async function liveGetLeadTypeDistribution() {
     `SELECT count(DISTINCT distinct_id) FROM events WHERE event='form_exit' AND timestamp>now()-interval 30 day`,
   )
   const get = (q) => Number(q.rows?.[0]?.[0] ?? 0)
-  return { labels: ['Hot', 'Warm', 'Cold', 'Lost'], data: [get(hot), get(warm), get(cold), get(lost)] }
+  return {
+    labels: ['Hot', 'Warm', 'Cold', 'Lost'],
+    data: [get(hot), get(warm), get(cold), get(lost)],
+  }
 }
 
 async function liveGetTrafficSourceBreakdown() {
@@ -161,7 +163,14 @@ async function liveGetRecentLeads({ page = 1, limit = 10 }) {
     pdfsOpened: Number(r[3] || 0),
     reachedForm: Number(r[4] || 0),
     score: Math.min(10, Number(r[2]) * 2 + Number(r[3]) * 3 + (Number(r[4]) > 0 ? 4 : 0)),
-    type: Number(r[4]) > 0 ? 'Hot' : Number(r[3]) > 0 ? 'Warm' : Number(r[2]) > 0 ? 'Cold' : 'Disengaged',
+    type:
+      Number(r[4]) > 0
+        ? 'Hot'
+        : Number(r[3]) > 0
+          ? 'Warm'
+          : Number(r[2]) > 0
+            ? 'Cold'
+            : 'Disengaged',
     status: Number(r[4]) > 0 ? 'Reached Form' : 'Browsing',
   }))
   return { items: rows, total: rows.length }
@@ -431,13 +440,15 @@ export const dashboardApi = {
   getSeoKeywords: USE_LIVE ? liveGetSeoLandingPages : getSeoKeywords,
   getPerfIssues: USE_LIVE ? liveGetPerfIssues : getPerfIssues,
   getTopBuyersToday: USE_LIVE ? liveGetTopBuyersToday : async () => [],
-  getFunnel: USE_LIVE ? liveGetFunnel : async () => [
-    { step: 'Landing', count: 100 },
-    { step: 'Product', count: 60 },
-    { step: 'PDF', count: 30 },
-    { step: 'Form Start', count: 20 },
-    { step: 'Form Submit', count: 10 },
-  ],
+  getFunnel: USE_LIVE
+    ? liveGetFunnel
+    : async () => [
+        { step: 'Landing', count: 100 },
+        { step: 'Product', count: 60 },
+        { step: 'PDF', count: 30 },
+        { step: 'Form Start', count: 20 },
+        { step: 'Form Submit', count: 10 },
+      ],
   async getVisitorDetail(id) {
     if (!USE_LIVE) {
       const { getLeadById } = await import('../mocks/handlers')
