@@ -1,14 +1,33 @@
-import { fileURLToPath } from 'node:url'
-import { mergeConfig, defineConfig, configDefaults } from 'vitest/config'
-import viteConfig from './vite.config'
+import { fileURLToPath, URL } from 'node:url'
 
-export default mergeConfig(
-  viteConfig,
-  defineConfig({
-    test: {
-      environment: 'jsdom',
-      exclude: [...configDefaults.exclude, 'e2e/**'],
-      root: fileURLToPath(new URL('./', import.meta.url)),
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+    vueDevTools({
+      enabled: true,
+      componentInspector: true,
+    })
+  ],
+  server: {
+    proxy: {
+      // For local dev without deploying the serverless function
+      // If you run a local Node server for the PostHog proxy on port 8787:
+      //   npm run posthog:dev (see command below)
+      // Then we forward /api to it.
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+      },
     },
-  }),
-)
+  },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+})
