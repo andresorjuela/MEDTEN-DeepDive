@@ -3,9 +3,9 @@ import posthog, { type PostHogConfig } from 'posthog-js'
 type EventPayload = Record<string, unknown>
 
 const APP_NAME = import.meta.env.VITE_APP_NAME || 'Medten DeepDive'
-const KEY = import.meta.env.VITE_POSTHOG_KEY || ''
-const HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com'
-const MOCK = String(import.meta.env.VITE_MOCK_MODE || '').toLowerCase() === 'true'
+const KEY = import.meta.env.VITE_POSTHOG_KEY || 'phc_JDxkixvdRVTv8jAlZXTt0p0PASyL0502XVxe'
+const HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
+const MOCK = String(import.meta.env.VITE_MOCK_MODE || 'false').toLowerCase() === 'true'
 
 let initialized = false
 

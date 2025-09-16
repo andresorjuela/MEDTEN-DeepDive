@@ -3,8 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 import Lottie from 'lottie-web'
 import animationData from '../../../Discover.json'
 
-const supabaseUrl = 'https://weahzmsmhxextohossfp.supabase.co'
+// Use environment variables for Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://weahzmsmhxextohossfp.supabase.co'
 const supabaseKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlYWh6bXNtaHhleHRvaG9zc2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NjM4NDAsImV4cCI6MjA3MjEzOTg0MH0.Ack4J88Wfx3QniM1YMyIaIvFZ5P1_XTWC-bovwdYJm8'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
