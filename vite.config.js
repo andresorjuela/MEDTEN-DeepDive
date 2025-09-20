@@ -8,16 +8,13 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()], // Temporarily disable vueDevTools to fix the error
   server: {
-    proxy: {
-      // For local dev without deploying the serverless function
-      // If you run a local Node server for the PostHog proxy on port 8787:
-      //   npm run posthog:dev (see command below)
-      // Then we forward /api to it.
-      '/api': {
-        target: 'http://localhost:8787',
-        changeOrigin: true,
-      },
-    },
+    // Remove proxy - we'll use AWS API Gateway directly
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:8787',
+    //     changeOrigin: true,
+    //   },
+    // },
   },
   resolve: {
     alias: {
