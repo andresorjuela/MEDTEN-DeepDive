@@ -19,6 +19,11 @@ export default {
       password: '',
       loading: false,
       error: '',
+      showResetModal: false,
+      resetEmail: '',
+      resetLoading: false,
+      resetError: '',
+      resetSuccess: false,
     }
   },
   computed: {
@@ -27,6 +32,9 @@ export default {
     },
     emailValid() {
       return this.email.length > 0 && /.+@.+\..+/.test(this.email)
+    },
+    resetEmailValid() {
+      return this.resetEmail.length > 0 && /.+@.+\..+/.test(this.resetEmail)
     },
   },
   mounted() {
@@ -63,6 +71,43 @@ export default {
         this.error = error.message || 'Login failed'
       } finally {
         this.loading = false
+      }
+    },
+    openResetModal() {
+      this.showResetModal = true
+      this.resetEmail = ''
+      this.resetError = ''
+      this.resetSuccess = false
+    },
+    closeResetModal() {
+      this.showResetModal = false
+      this.resetEmail = ''
+      this.resetError = ''
+      this.resetSuccess = false
+    },
+    async sendResetEmail() {
+      if (!this.resetEmailValid || this.resetLoading) return
+      
+      this.resetError = ''
+      this.resetLoading = true
+      
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(this.resetEmail, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        })
+        
+        if (error) {
+          console.error('Reset password error:', error)
+          throw error
+        }
+        
+        this.resetSuccess = true
+        console.log('Reset password email sent successfully')
+      } catch (error) {
+        console.error('Error sending reset email:', error)
+        this.resetError = error.message || 'Failed to send reset email'
+      } finally {
+        this.resetLoading = false
       }
     },
   },
@@ -137,6 +182,17 @@ export default {
           </button>
 
           <p v-if="error" class="text-sm text-orange-600">{{ error }}</p>
+
+          <!-- Forgot Password Link -->
+          <div class="text-center">
+            <button
+              type="button"
+              @click="openResetModal"
+              class="text-sm text-forest-600 hover:text-forest-700 underline"
+            >
+              Forgot Password?
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -148,6 +204,92 @@ export default {
           <div ref="lottieContainer" class="w-full h-full">
             <!-- Lottie animation will be rendered here -->
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div
+      v-if="showResetModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="closeResetModal"
+    >
+      <div class="bg-white rounded-xl p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-heading">Reset Password</h2>
+          <button
+            @click="closeResetModal"
+            class="text-muted hover:text-heading transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="!resetSuccess">
+          <p class="text-sm text-muted mb-4">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
+
+          <form @submit.prevent="sendResetEmail" class="space-y-4">
+            <div class="relative">
+              <span class="absolute inset-y-0 left-3 grid place-items-center text-muted">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 2v.01L12 13 4 6.01V6h16ZM4 18V8.236l7.386 5.905a1 1 0 0 0 1.228 0L20 8.236V18H4Z"
+                  />
+                </svg>
+              </span>
+              <input
+                v-model.trim="resetEmail"
+                type="email"
+                autocomplete="email"
+                placeholder="Email Address"
+                class="w-full rounded-xl border border-border pl-10 pr-10 py-3 bg-card focus:outline-none focus:ring-2 focus:ring-forest-900"
+              />
+              <span
+                v-if="resetEmailValid"
+                class="absolute inset-y-0 right-3 grid place-items-center text-green-600"
+              >✔</span>
+            </div>
+
+            <p v-if="resetEmail && !/.+@.+\..+/.test(resetEmail)" class="text-xs text-orange-500">
+              Enter a valid email
+            </p>
+
+            <button
+              :disabled="!resetEmailValid || resetLoading"
+              class="btn-primary w-full disabled:opacity-50 disabled:pointer-events-none"
+            >
+              {{ resetLoading ? 'Sending...' : 'Send Reset Link' }}
+            </button>
+
+            <p v-if="resetError" class="text-sm text-orange-600">{{ resetError }}</p>
+          </form>
+        </div>
+
+        <div v-else class="text-center">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-heading mb-2">Check Your Email</h3>
+          <p class="text-sm text-muted mb-4">
+            We've sent a password reset link to <strong>{{ resetEmail }}</strong>
+          </p>
+          <button
+            @click="closeResetModal"
+            class="btn-primary w-full"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

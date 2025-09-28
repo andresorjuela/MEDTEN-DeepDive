@@ -3,6 +3,7 @@ import { initPostHog, events } from '../analytics/posthog'
 
 // Lazy-loaded route components
 const LoginPage = () => import('../pages/auth/LoginPage.vue')
+const ResetPasswordPage = () => import('../pages/auth/ResetPasswordPage.vue')
 const DashboardPage = () => import('../pages/dashboard/DashboardPage.vue')
 const LeadsPage = () => import('../pages/leads/LeadsPage.vue')
 const LeadDetailPage = () => import('../pages/leads/LeadDetailPage.vue')
@@ -22,6 +23,12 @@ const router = createRouter({
       path: '/auth/login',
       name: 'login',
       component: LoginPage,
+      meta: { public: true },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: ResetPasswordPage,
       meta: { public: true },
     },
     {
