@@ -1,30 +1,128 @@
 import { defineStore } from 'pinia'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '',
     user: null,
+    session: null,
+    loading: false,
   }),
   getters: {
-    isAuthenticated: (state) => !!state.token,
+    isAuthenticated: (state) => !!state.user,
+    userEmail: (state) => state.user?.email || '',
+    userId: (state) => state.user?.id || '',
+    userName: (state) => state.user?.user_metadata?.name || state.user?.email?.split('@')[0] || '',
+    userAvatar: (state) => state.user?.user_metadata?.avatar_url || '',
+    userRole: (state) => state.user?.user_metadata?.role || 'user',
+    isEmailConfirmed: (state) => state.user?.email_confirmed_at !== null,
+    lastSignIn: (state) => state.user?.last_sign_in_at || null,
   },
   actions: {
-    async login(payload) {
-      // mock login; replace with real API
-      const { email, password } = payload || {}
-      await new Promise((r) => setTimeout(r, 400))
-      if (email === 'admin@medten.dev' && password === 'admin123') {
-        this.token = 'mock-token'
-        this.user = { id: 1, email }
-        localStorage.setItem('token', this.token)
-        return true
+    async initializeAuth() {
+      this.loading = true
+      try {
+        // Check for existing session
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Error getting session:', error)
+          return
+        }
+
+        if (session) {
+          this.session = session
+          this.user = session.user
+          console.log('User session restored:', this.user.email)
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+      } finally {
+        this.loading = false
       }
-      throw new Error('Invalid credentials')
     },
-    logout() {
-      this.token = ''
-      this.user = null
-      if (typeof window !== 'undefined') localStorage.removeItem('token')
+
+    async login(payload) {
+      this.loading = true
+      try {
+        const { email, password } = payload || {}
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+
+        if (error) {
+          console.error('Login error:', error)
+          throw error
+        }
+
+        this.session = data.session
+        this.user = data.user
+        console.log('User logged in:', this.user.email)
+        return true
+      } catch (error) {
+        console.error('Login error:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async logout() {
+      this.loading = true
+      try {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+          console.error('Logout error:', error)
+          throw error
+        }
+
+        this.user = null
+        this.session = null
+        console.log('User logged out')
+      } catch (error) {
+        console.error('Logout error:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async resetPassword(email) {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        })
+        if (error) {
+          console.error('Reset password error:', error)
+          throw error
+        }
+        return true
+      } catch (error) {
+        console.error('Reset password error:', error)
+        throw error
+      }
+    },
+
+    async updatePassword(newPassword) {
+      try {
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword,
+        })
+        if (error) {
+          console.error('Update password error:', error)
+          throw error
+        }
+        return true
+      } catch (error) {
+        console.error('Update password error:', error)
+        throw error
+      }
     },
   },
 })

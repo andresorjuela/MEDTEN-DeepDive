@@ -1,15 +1,13 @@
 <script>
-import { createClient } from '@supabase/supabase-js'
-
-// Use environment variables for Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://weahzmsmhxextohossfp.supabase.co'
-const supabaseKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlYWh6bXNtaHhleHRvaG9zc2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NjM4NDAsImV4cCI6MjA3MjEzOTg0MH0.Ack4J88Wfx3QniM1YMyIaIvFZ5P1_XTWC-bovwdYJm8'
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { useAuthStore } from '../../stores/auth'
+import BaseInput from '../../components/ui/BaseInput.vue'
+import { validationRules, commonRules } from '../../utils/validation'
 
 export default {
   name: 'ResetPasswordPage',
+  components: {
+    BaseInput,
+  },
   data() {
     return {
       password: '',
@@ -17,28 +15,36 @@ export default {
       loading: false,
       error: '',
       success: false,
+      passwordValidation: { isValid: false, error: '' },
+      confirmPasswordValidation: { isValid: false, error: '' },
     }
   },
   computed: {
     isValid() {
-      return this.password.length >= 6 && this.password === this.confirmPassword
+      return this.passwordValidation.isValid && this.confirmPasswordValidation.isValid
     },
     passwordValid() {
-      return this.password.length >= 6
+      return this.passwordValidation.isValid
     },
     passwordsMatch() {
-      return this.password === this.confirmPassword && this.confirmPassword.length > 0
+      return this.confirmPasswordValidation.isValid
+    },
+    passwordRules() {
+      return commonRules.requiredPassword(6)
+    },
+    confirmPasswordRules() {
+      return [
+        validationRules.required('Please confirm your password'),
+        validationRules.confirmPassword(this.password, 'Passwords do not match'),
+      ]
     },
   },
   async mounted() {
     // Check if we have a valid session from the reset link
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession()
+    const authStore = useAuthStore()
 
-    if (error || !session) {
-      console.error('No valid session found:', error)
+    if (!authStore.isAuthenticated) {
+      console.error('No valid session found')
       this.error = 'Invalid or expired reset link. Please request a new password reset.'
       return
     }
@@ -53,14 +59,8 @@ export default {
       this.loading = true
 
       try {
-        const { error } = await supabase.auth.updateUser({
-          password: this.password,
-        })
-
-        if (error) {
-          console.error('Password update error:', error)
-          throw error
-        }
+        const authStore = useAuthStore()
+        await authStore.updatePassword(this.password)
 
         this.success = true
         console.log('Password updated successfully')
@@ -75,6 +75,14 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    onPasswordValidationChange(validation) {
+      this.passwordValidation = validation
+    },
+
+    onConfirmPasswordValidationChange(validation) {
+      this.confirmPasswordValidation = validation
     },
   },
 }
@@ -99,38 +107,30 @@ export default {
 
         <form @submit.prevent="updatePassword" class="space-y-3 sm:space-y-4">
           <!-- New Password -->
-          <div>
-            <label class="block text-xs sm:text-sm font-medium text-heading mb-1 sm:mb-2"
-              >New Password</label
-            >
-            <input
-              v-model="password"
-              type="password"
-              autocomplete="new-password"
-              placeholder="Enter new password"
-              class="w-full rounded-xl border border-border px-3 py-2.5 sm:py-3 bg-card focus:outline-none focus:ring-2 focus:ring-forest-900 text-sm sm:text-base"
-            />
-            <p v-if="password && !passwordValid" class="text-xs text-orange-500 mt-1">
-              Password must be at least 6 characters
-            </p>
-          </div>
+          <BaseInput
+            v-model="password"
+            type="password"
+            label="New Password"
+            placeholder="Enter new password"
+            autocomplete="new-password"
+            :validation-rules="passwordRules"
+            :validate-on-blur="true"
+            :validate-on-input="false"
+            @validation-change="onPasswordValidationChange"
+          />
 
           <!-- Confirm Password -->
-          <div>
-            <label class="block text-xs sm:text-sm font-medium text-heading mb-1 sm:mb-2"
-              >Confirm Password</label
-            >
-            <input
-              v-model="confirmPassword"
-              type="password"
-              autocomplete="new-password"
-              placeholder="Confirm new password"
-              class="w-full rounded-xl border border-border px-3 py-2.5 sm:py-3 bg-card focus:outline-none focus:ring-2 focus:ring-forest-900 text-sm sm:text-base"
-            />
-            <p v-if="confirmPassword && !passwordsMatch" class="text-xs text-orange-500 mt-1">
-              Passwords do not match
-            </p>
-          </div>
+          <BaseInput
+            v-model="confirmPassword"
+            type="password"
+            label="Confirm Password"
+            placeholder="Confirm new password"
+            autocomplete="new-password"
+            :validation-rules="confirmPasswordRules"
+            :validate-on-blur="true"
+            :validate-on-input="false"
+            @validation-change="onConfirmPasswordValidationChange"
+          />
 
           <button
             :disabled="!isValid || loading"

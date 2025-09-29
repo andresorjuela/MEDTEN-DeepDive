@@ -1,17 +1,15 @@
 <script>
-import { createClient } from '@supabase/supabase-js'
+import { useAuthStore } from '../../stores/auth'
+import BaseInput from '../../components/ui/BaseInput.vue'
+import { validationRules, commonRules } from '../../utils/validation'
 import Lottie from 'lottie-web'
 import animationData from '../../../Discover.json'
 
-// Use environment variables for Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://weahzmsmhxextohossfp.supabase.co'
-const supabaseKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlYWh6bXNtaHhleHRvaG9zc2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NjM4NDAsImV4cCI6MjA3MjEzOTg0MH0.Ack4J88Wfx3QniM1YMyIaIvFZ5P1_XTWC-bovwdYJm8'
-const supabase = createClient(supabaseUrl, supabaseKey)
-
 export default {
   name: 'LoginPage',
+  components: {
+    BaseInput,
+  },
   data() {
     return {
       mode: 'signin',
@@ -24,17 +22,29 @@ export default {
       resetLoading: false,
       resetError: '',
       resetSuccess: false,
+      emailValidation: { isValid: false, error: '' },
+      passwordValidation: { isValid: false, error: '' },
+      resetEmailValidation: { isValid: false, error: '' },
     }
   },
   computed: {
     isValid() {
-      return /.+@.+\..+/.test(this.email) && this.password.length >= 6
+      return this.emailValidation.isValid && this.passwordValidation.isValid
     },
     emailValid() {
-      return this.email.length > 0 && /.+@.+\..+/.test(this.email)
+      return this.emailValidation.isValid
     },
     resetEmailValid() {
-      return this.resetEmail.length > 0 && /.+@.+\..+/.test(this.resetEmail)
+      return this.resetEmailValidation.isValid
+    },
+    emailRules() {
+      return commonRules.requiredEmail
+    },
+    passwordRules() {
+      return commonRules.requiredPassword(6)
+    },
+    resetEmailRules() {
+      return commonRules.requiredEmail
     },
   },
   mounted() {
@@ -53,15 +63,11 @@ export default {
       this.loading = true
       console.log('Attempting to log in with:', this.email)
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const authStore = useAuthStore()
+        await authStore.login({
           email: this.email,
           password: this.password,
         })
-        if (error) {
-          console.error('Login error:', error)
-          throw error
-        }
-        localStorage.setItem('token', data.session.access_token)
         console.log('Login successful')
         const redirect = this.$route.query.redirect || '/dashboard'
         console.log('Redirecting to:', redirect)
@@ -92,15 +98,8 @@ export default {
       this.resetLoading = true
 
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(this.resetEmail, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        })
-
-        if (error) {
-          console.error('Reset password error:', error)
-          throw error
-        }
-
+        const authStore = useAuthStore()
+        await authStore.resetPassword(this.resetEmail)
         this.resetSuccess = true
         console.log('Reset password email sent successfully')
       } catch (error) {
@@ -109,6 +108,18 @@ export default {
       } finally {
         this.resetLoading = false
       }
+    },
+
+    onEmailValidationChange(validation) {
+      this.emailValidation = validation
+    },
+
+    onPasswordValidationChange(validation) {
+      this.passwordValidation = validation
+    },
+
+    onResetEmailValidationChange(validation) {
+      this.resetEmailValidation = validation
     },
   },
 }
@@ -133,50 +144,29 @@ export default {
         <p class="text-xs sm:text-sm text-muted mb-4 sm:mb-6">Please enter your details</p>
 
         <form @submit.prevent="onSubmit" class="space-y-3 sm:space-y-4">
-          <!-- Email field with prefix/suffix icons -->
-          <div class="relative">
-            <span class="absolute inset-y-0 left-3 grid place-items-center text-muted">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 2v.01L12 13 4 6.01V6h16ZM4 18V8.236l7.386 5.905a1 1 0 0 0 1.228 0L20 8.236V18H4Z"
-                />
-              </svg>
-            </span>
-            <input
-              v-model.trim="email"
-              type="email"
-              autocomplete="email"
-              placeholder="Email Address"
-              class="w-full rounded-xl border border-border pl-9 sm:pl-10 pr-9 sm:pr-10 py-2.5 sm:py-3 bg-card focus:outline-none focus:ring-2 focus:ring-forest-900 text-sm sm:text-base"
-            />
-            <span
-              v-if="emailValid"
-              class="absolute inset-y-0 right-3 grid place-items-center text-green-600 text-sm sm:text-base"
-              >✔</span
-            >
-            <p v-if="email && !/.+@.+\..+/.test(email)" class="text-xs text-orange-500 mt-1">
-              Enter a valid email
-            </p>
-          </div>
+          <!-- Email field -->
+          <BaseInput
+            v-model="email"
+            type="email"
+            placeholder="Email Address"
+            autocomplete="email"
+            :validation-rules="emailRules"
+            :validate-on-blur="true"
+            :validate-on-input="false"
+            @validation-change="onEmailValidationChange"
+          />
 
           <!-- Password -->
-          <div>
-            <input
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Password"
-              class="w-full rounded-xl border border-border px-3 py-2.5 sm:py-3 bg-card focus:outline-none focus:ring-2 focus:ring-forest-900 text-sm sm:text-base"
-            />
-            <p v-if="password && password.length < 6" class="text-xs text-orange-500 mt-1">
-              At least 6 characters
-            </p>
-          </div>
+          <BaseInput
+            v-model="password"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            :validation-rules="passwordRules"
+            :validate-on-blur="true"
+            :validate-on-input="false"
+            @validation-change="onPasswordValidationChange"
+          />
 
           <button
             :disabled="!isValid || loading"
@@ -244,36 +234,16 @@ export default {
           </p>
 
           <form @submit.prevent="sendResetEmail" class="space-y-3 sm:space-y-4">
-            <div class="relative">
-              <span class="absolute inset-y-0 left-3 grid place-items-center text-muted">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 2v.01L12 13 4 6.01V6h16ZM4 18V8.236l7.386 5.905a1 1 0 0 0 1.228 0L20 8.236V18H4Z"
-                  />
-                </svg>
-              </span>
-              <input
-                v-model.trim="resetEmail"
-                type="email"
-                autocomplete="email"
-                placeholder="Email Address"
-                class="w-full rounded-xl border border-border pl-9 sm:pl-10 pr-9 sm:pr-10 py-2.5 sm:py-3 bg-card focus:outline-none focus:ring-2 focus:ring-forest-900 text-sm sm:text-base"
-              />
-              <span
-                v-if="resetEmailValid"
-                class="absolute inset-y-0 right-3 grid place-items-center text-green-600 text-sm sm:text-base"
-                >✔</span
-              >
-            </div>
-
-            <p v-if="resetEmail && !/.+@.+\..+/.test(resetEmail)" class="text-xs text-orange-500">
-              Enter a valid email
-            </p>
+            <BaseInput
+              v-model="resetEmail"
+              type="email"
+              placeholder="Email Address"
+              autocomplete="email"
+              :validation-rules="resetEmailRules"
+              :validate-on-blur="true"
+              :validate-on-input="false"
+              @validation-change="onResetEmailValidationChange"
+            />
 
             <button
               :disabled="!resetEmailValid || resetLoading"

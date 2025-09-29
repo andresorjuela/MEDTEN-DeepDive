@@ -77,14 +77,31 @@ export const handler = async (event) => {
           Authorization: `Bearer ${KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }),
+        body: JSON.stringify({
+          query: query,
+          kind: 'HogQLQuery',
+        }),
       })
 
       const data = await resp.json()
       console.log('PostHog response status:', resp.status)
+      console.log('PostHog response data:', JSON.stringify(data, null, 2))
+
+      if (!resp.ok) {
+        console.error('PostHog API error:', data)
+        return {
+          statusCode: 500,
+          headers: baseHeaders,
+          body: JSON.stringify({
+            error: 'PostHog API error',
+            details: data,
+            status: resp.status,
+          }),
+        }
+      }
 
       return {
-        statusCode: resp.ok ? 200 : 500,
+        statusCode: 200,
         headers: baseHeaders,
         body: JSON.stringify(data),
       }
