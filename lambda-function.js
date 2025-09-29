@@ -1,7 +1,13 @@
 export const handler = async (event) => {
   console.log('Event received:', JSON.stringify(event))
 
-  const ALLOWED_ORIGINS = ['http://medten-deepdive.s3-website-us-east-1.amazonaws.com']
+  const ALLOWED_ORIGINS = [
+    'http://medten-deepdive.s3-website-us-east-1.amazonaws.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+  ]
   const reqOrigin = event?.headers?.origin || event?.headers?.Origin || ''
   const allowOrigin = ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : ALLOWED_ORIGINS[0]
 

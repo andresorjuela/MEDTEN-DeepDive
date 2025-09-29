@@ -11,10 +11,19 @@ import DonutCard from '../../components/charts/DonutCard.vue'
 import FunnelChart from '../../components/charts/FunnelChart.vue'
 import { events } from '../../analytics/posthog'
 import { dashboardApi } from '../../services/dashboardApi'
+import EnvironmentDebug from '../../components/debug/EnvironmentDebug.vue'
 
 export default {
   name: 'DashboardPage',
-  components: { BaseKpi, BaseTable, BarChart, DonutCard, FunnelChart, BaseSkeleton },
+  components: {
+    BaseKpi,
+    BaseTable,
+    BarChart,
+    DonutCard,
+    FunnelChart,
+    BaseSkeleton,
+    EnvironmentDebug,
+  },
   data() {
     return {
       kpis: [],
@@ -38,19 +47,14 @@ export default {
     }
   },
   mounted() {
-    this.loadKpis()
-    dashboardApi.getLeadTypeDistribution().then((d) => (this.leadType = d))
-    dashboardApi.getTrafficSourceBreakdown().then((d) => (this.traffic = d))
-    this.fetchRecent()
-    dashboardApi.getTopProducts().then((d) => (this.topProducts = d.rows))
-    dashboardApi.getTopLandingPages().then((d) => (this.topLanding = d.rows))
-    dashboardApi.getLostLeads().then((d) => (this.lostLeads = d.rows))
-    dashboardApi.getLiveActions().then((d) => (this.liveActions = d.rows))
-    dashboardApi.getSeoKeywords().then((d) => (this.seoKeywords = d.rows))
-    dashboardApi.getPerfIssues().then((d) => (this.perfIssues = d.rows))
-    dashboardApi.getFunnel().then((d) => (this.funnel = d))
+    this.loadAllData()
   },
   methods: {
+    async loadAllData() {
+      await this.loadKpis()
+      await this.loadCharts()
+      await this.loadTables()
+    },
     async loadKpis() {
       this.loadingKpis = true
       try {
@@ -59,11 +63,26 @@ export default {
         this.loadingKpis = false
       }
     },
+    async loadCharts() {
+      const rangeOpts = { range: this.range }
+      this.leadType = await dashboardApi.getLeadTypeDistribution(rangeOpts)
+      this.traffic = await dashboardApi.getTrafficSourceBreakdown(rangeOpts)
+      this.funnel = await dashboardApi.getFunnel()
+    },
+    async loadTables() {
+      this.fetchRecent()
+      this.topProducts = (await dashboardApi.getTopProducts()).rows
+      this.topLanding = (await dashboardApi.getTopLandingPages()).rows
+      this.lostLeads = (await dashboardApi.getLostLeads()).rows
+      this.liveActions = (await dashboardApi.getLiveActions()).rows
+      this.seoKeywords = (await dashboardApi.getSeoKeywords()).rows
+      this.perfIssues = (await dashboardApi.getPerfIssues()).rows
+    },
     onFiltersChanged: (() => {
       let id
       return function () {
         clearTimeout(id)
-        id = setTimeout(() => this.fetchRecent(1), 300)
+        id = setTimeout(() => this.loadAllData(), 300)
       }
     })(),
     async fetchRecent(page = 1) {
@@ -84,6 +103,12 @@ export default {
     },
     async runDebugQuery() {
       try {
+        console.log('🔍 Debug Query - Environment:', {
+          VITE_MOCK_MODE: import.meta.env.VITE_MOCK_MODE,
+          VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+          PROD: import.meta.env.PROD,
+        })
+
         const r = await api.post('', {
           query: this.debugQuery,
         })
@@ -98,6 +123,9 @@ export default {
 
 <template>
   <div class="space-y-6">
+    <!-- Environment Debug (temporary) -->
+    <EnvironmentDebug />
+
     <!-- Filter bar -->
     <div class="card p-4 grid gap-3 md:grid-cols-4">
       <input
@@ -135,7 +163,7 @@ export default {
       <label class="text-sm text-muted mr-2">Range</label>
       <select
         v-model="range"
-        @change="loadKpis"
+        @change="loadAllData"
         class="rounded-lg border border-border px-3 py-2 min-w-[180px]"
       >
         <option value="24h">Last 24 hours</option>

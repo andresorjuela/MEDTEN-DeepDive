@@ -16,8 +16,15 @@ import {
   getTopPathsMock,
 } from '../mocks/dashboard'
 
-// If VITE_MOCK_MODE is not explicitly set to 'false', default to mock mode
+// If VITE_MOCK_MODE is explicitly set to 'false', use live data, otherwise use mock
 const USE_LIVE = String(import.meta.env.VITE_MOCK_MODE || '').toLowerCase() === 'false'
+
+// Debug logging
+console.log('🔍 Dashboard API Debug:', {
+  VITE_MOCK_MODE: import.meta.env.VITE_MOCK_MODE,
+  USE_LIVE: USE_LIVE,
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+})
 
 function dateWhere(opts = {}) {
   const range = opts.range || '30d'
@@ -56,9 +63,20 @@ function normalizeRows(raw) {
 
 /** Run a HogQL query through the proxy and return { rows } */
 async function query(hogql) {
-  const res = await api.post('', { query: hogql }) // axios instance (throws on non-2xx)
-  const rows = normalizeRows(res.data)
-  return { rows }
+  console.log('🚀 Making PostHog API call:', {
+    url: api.defaults.baseURL,
+    query: hogql.substring(0, 100) + '...',
+  })
+
+  try {
+    const res = await api.post('', { query: hogql }) // axios instance (throws on non-2xx)
+    console.log('✅ PostHog API response:', res.data)
+    const rows = normalizeRows(res.data)
+    return { rows }
+  } catch (error) {
+    console.error('❌ PostHog API error:', error)
+    throw error
+  }
 }
 
 /* -------------------- Live adapters -------------------- */
@@ -107,18 +125,19 @@ async function liveGetDashboardKPIs(opts = {}) {
   ]
 }
 
-async function liveGetLeadTypeDistribution() {
+async function liveGetLeadTypeDistribution(opts = {}) {
+  const dateFilter = dateWhere(opts)
   const hot = await query(
-    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='reached_inquiry_form' AND timestamp>now()-interval 30 day`,
+    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='reached_inquiry_form' AND ${dateFilter}`,
   )
   const warm = await query(
-    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='pdf_opened' AND timestamp>now()-interval 30 day`,
+    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='pdf_opened' AND ${dateFilter}`,
   )
   const cold = await query(
-    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='product_viewed' AND timestamp>now()-interval 30 day`,
+    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='product_viewed' AND ${dateFilter}`,
   )
   const lost = await query(
-    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='form_exit' AND timestamp>now()-interval 30 day`,
+    `SELECT count(DISTINCT distinct_id) FROM events WHERE event='form_exit' AND ${dateFilter}`,
   )
   const get = (q) => Number(q.rows?.[0]?.[0] ?? 0)
   return {
@@ -127,10 +146,11 @@ async function liveGetLeadTypeDistribution() {
   }
 }
 
-async function liveGetTrafficSourceBreakdown() {
+async function liveGetTrafficSourceBreakdown(opts = {}) {
+  const dateFilter = dateWhere(opts)
   const res = await query(`
     SELECT properties.source as s, count() AS c
-    FROM events WHERE event='page_view' AND timestamp > now() - interval 30 day
+    FROM events WHERE event='page_view' AND ${dateFilter}
     GROUP BY s ORDER BY c DESC
   `)
   const labels = []

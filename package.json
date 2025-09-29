@@ -7,16 +7,18 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
-    "dev:live": "concurrently -k \"node -r dotenv/config server/posthog-dev.js\" \"VITE_MOCK_MODE=false vite\"",
+    "dev": "VITE_MOCK_MODE=false vite",
+    "dev:mock": "vite",
+    "dev:live": "VITE_MOCK_MODE=false vite",
     "posthog:dev": "node server/posthog-dev.js",
     "build": "vite build",
+    "build:live": "VITE_MOCK_MODE=false vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "deploy": "npm run build && aws s3 sync dist/ s3://medten-deepdive --delete",
-    "deploy:prod": "npm run build && aws s3 sync dist/ s3://medten-deepdive --delete --profile production"
+    "deploy": "npm run build:live && aws s3 sync dist/ s3://medten-deepdive --delete",
+    "deploy:prod": "npm run build:live && aws s3 sync dist/ s3://medten-deepdive --delete --profile production"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.1",
