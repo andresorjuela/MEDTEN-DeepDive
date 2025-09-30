@@ -12,6 +12,7 @@ import FunnelChart from '../../components/charts/FunnelChart.vue'
 import { events } from '../../analytics/posthog'
 import { useDashboardStore } from '../../stores/dashboard'
 import EnvironmentDebug from '../../components/debug/EnvironmentDebug.vue'
+import Icon from '../../components/ui/Icon.vue'
 
 export default {
   name: 'DashboardPage',
@@ -23,6 +24,7 @@ export default {
     FunnelChart,
     BaseSkeleton,
     EnvironmentDebug,
+    Icon,
   },
   data() {
     return {
@@ -147,8 +149,9 @@ export default {
         <button
           @click="refreshData"
           :disabled="dashboardStore.isLoading"
-          class="btn-primary px-3 py-1 text-sm"
+          class="btn-primary px-3 py-1 text-sm flex items-center gap-2"
         >
+          <Icon name="refresh" :size="16" :class="{ 'animate-spin': dashboardStore.isLoading }" />
           {{ dashboardStore.isLoading ? 'Refreshing...' : 'Refresh' }}
         </button>
         <span class="text-xs text-muted">
@@ -156,6 +159,7 @@ export default {
         </span>
       </div>
       <div class="flex items-center gap-2">
+        <Icon name="calendar" :size="16" class="text-muted" />
         <label class="text-sm text-muted">Range</label>
         <select
           v-model="range"
@@ -192,8 +196,11 @@ export default {
             title="Total Visits"
             :value="kpis.find((k) => k.key === 'total_visits')?.value || '0'"
             :delta="kpis.find((k) => k.key === 'total_visits')?.delta || '+0%'"
-            icon="👥"
-          />
+          >
+            <template #icon>
+              <Icon name="users" :size="20" color="white" />
+            </template>
+          </BaseKpi>
         </button>
 
         <!-- Inquiries Submitted -->
@@ -202,8 +209,11 @@ export default {
             title="Inquiries Submitted"
             :value="kpis.find((k) => k.key === 'inquiries_submitted')?.value || '0'"
             :delta="kpis.find((k) => k.key === 'inquiries_submitted')?.delta || '+0%'"
-            icon="📝"
-          />
+          >
+            <template #icon>
+              <Icon name="fileText" :size="20" color="white" />
+            </template>
+          </BaseKpi>
         </button>
 
         <!-- Drop Off Rate -->
@@ -212,8 +222,11 @@ export default {
             title="Drop Off Rate"
             :value="kpis.find((k) => k.key === 'drop_off_rate')?.value || '0%'"
             :delta="kpis.find((k) => k.key === 'drop_off_rate')?.delta || '+0%'"
-            icon="📉"
-          />
+          >
+            <template #icon>
+              <Icon name="trendingDown" :size="20" color="white" />
+            </template>
+          </BaseKpi>
         </button>
 
         <!-- Hot Leads -->
@@ -222,8 +235,11 @@ export default {
             title="Hot Leads"
             :value="kpis.find((k) => k.key === 'hot_leads')?.value || '0'"
             :delta="kpis.find((k) => k.key === 'hot_leads')?.delta || '+0%'"
-            icon="🔥"
-          />
+          >
+            <template #icon>
+              <Icon name="flame" :size="20" color="white" />
+            </template>
+          </BaseKpi>
         </button>
       </template>
     </div>

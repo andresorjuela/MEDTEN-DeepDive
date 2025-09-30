@@ -1,6 +1,11 @@
 <script>
+import Icon from '../ui/Icon.vue'
+
 export default {
   name: 'AppSidebar',
+  components: {
+    Icon,
+  },
   data() {
     return {
       isMobileMenuOpen: false,
@@ -27,14 +32,7 @@ export default {
     @click="toggleMobileMenu"
     class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-forest-900 text-white rounded-lg shadow-lg"
   >
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M4 6h16M4 12h16M4 18h16"
-      />
-    </svg>
+    <Icon name="menu" :size="24" color="white" />
   </button>
 
   <!-- Mobile Overlay -->
@@ -62,14 +60,7 @@ export default {
       </div>
       <!-- Close button for mobile -->
       <button @click="closeMobileMenu" class="lg:hidden p-1 text-white/60 hover:text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <Icon name="x" :size="24" color="currentColor" />
       </button>
     </div>
     <div class="px-4 pt-4 pb-2 text-xs tracking-[0.15em] text-white/60">MENU</div>
@@ -83,15 +74,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />
-          </svg>
+          <Icon name="layoutDashboard" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Overview</span>
         </a>
       </RouterLink>
@@ -105,15 +88,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M4 18V6m8 12V6m8 12V6" />
-          </svg>
+          <Icon name="barChart3" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Statistics</span>
         </a>
       </RouterLink>
@@ -127,15 +102,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 12a5 5 0 110-10 5 5 0 010 10zM4 22a8 8 0 1116 0" />
-          </svg>
+          <Icon name="users" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Leads</span>
         </a>
       </RouterLink>
@@ -149,15 +116,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
-          </svg>
+          <Icon name="package" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Product</span>
         </a>
       </RouterLink>
@@ -168,15 +127,7 @@ export default {
         class="flex items-center gap-3 px-3 py-2 rounded-lg transition text-white/80 hover:bg-white/10"
         active-class="bg-white/10 text-white"
       >
-        <svg
-          class="w-5 h-5 text-white/80"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          viewBox="0 0 24 24"
-        >
-          <path d="M21 21l-4.35-4.35M10 18a8 8 0 110-16 8 8 0 010 16z" />
-        </svg>
+        <Icon name="search" :size="20" color="rgba(255,255,255,0.8)" />
         <span>Search</span>
       </router-link>
 
@@ -186,15 +137,7 @@ export default {
         class="flex items-center gap-3 px-3 py-2 rounded-lg transition text-white/80 hover:bg-white/10"
         active-class="bg-white/10 text-white"
       >
-        <svg
-          class="w-5 h-5 text-white/80"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          viewBox="0 0 24 24"
-        >
-          <path d="M3 5h18M3 12h12M3 19h6" />
-        </svg>
+        <Icon name="route" :size="20" color="rgba(255,255,255,0.8)" />
         <span>Paths</span>
       </router-link>
 
@@ -208,15 +151,7 @@ export default {
           ]"
         >
           <span class="flex items-center gap-3">
-            <svg
-              class="w-5 h-5 text-white/80"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              viewBox="0 0 24 24"
-            >
-              <path d="M21 8v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18-3H3m3 0V3m12 2V3" />
-            </svg>
+            <Icon name="mail" :size="20" color="rgba(255,255,255,0.8)" />
             <span>Messages</span>
           </span>
           <span class="px-2 py-0.5 rounded-full text-forest-900 bg-lime-400 text-xs font-semibold"
@@ -234,15 +169,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M5 12h14M5 12a7 7 0 1114 0 7 7 0 11-14 0z" />
-          </svg>
+          <Icon name="creditCard" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Transactions</span>
         </a>
       </RouterLink>
@@ -260,15 +187,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <Icon name="checkCircle" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Lead Rules</span>
         </a>
       </RouterLink>
@@ -286,15 +205,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 6v12m6-6H6" />
-          </svg>
+          <Icon name="settings" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Settings</span>
         </a>
       </RouterLink>
@@ -307,15 +218,7 @@ export default {
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
           ]"
         >
-          <svg
-            class="w-5 h-5 text-white/80"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2l3 7h7l-5.5 4 2 7-6.5-4.5L6 20l2-7L2 9h7z" />
-          </svg>
+          <Icon name="shield" :size="20" color="rgba(255,255,255,0.8)" />
           <span>Security</span>
         </a>
       </RouterLink>

@@ -70,11 +70,63 @@
     @apply inline-flex items-center gap-1 rounded-full bg-orange-500/10 text-orange-600 px-2 py-0.5 text-xs font-medium;
   }
 
-  /* Primary action button */
+  /* Primary action button with beautiful gradient */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-forest-900 text-white px-5 py-2.5 shadow transition will-change-transform;
+    @apply inline-flex items-center justify-center rounded-xl text-white px-5 py-2.5 shadow transition will-change-transform font-medium cursor-pointer;
+    background: linear-gradient(135deg, #0f261c 0%, #1f543b 50%, #16a34a 100%);
+    border: none;
   }
   .btn-primary:hover {
     @apply scale-[1.02] shadow-[var(--shadow-elevated)];
+    background: linear-gradient(135deg, #173926 0%, #22c55e 50%, #84cc16 100%);
+  }
+  .btn-primary:active {
+    @apply scale-[0.99];
+  }
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed scale-100;
+    background: linear-gradient(135deg, #0f261c 0%, #1f543b 50%, #16a34a 100%);
+  }
+
+  /* Secondary button with subtle gradient */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl text-forest-900 px-5 py-2.5 shadow transition will-change-transform font-medium cursor-pointer;
+    background: linear-gradient(135deg, #f5f7f6 0%, #e7ebea 100%);
+    border: none;
+  }
+  .btn-secondary:hover {
+    @apply scale-[1.02] shadow-[var(--shadow-elevated)];
+    background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+  }
+  .btn-secondary:active {
+    @apply scale-[0.98];
+  }
+
+  /* Success button with green gradient */
+  .btn-success {
+    @apply inline-flex items-center justify-center rounded-xl text-white px-5 py-2.5 shadow transition will-change-transform font-medium cursor-pointer;
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #84cc16 100%);
+    border: none;
+  }
+  .btn-success:hover {
+    @apply scale-[1.02] shadow-[var(--shadow-elevated)];
+    background: linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%);
+  }
+  .btn-success:active {
+    @apply scale-[0.98];
+  }
+
+  /* Danger button with red gradient */
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-xl text-white px-5 py-2.5 shadow transition will-change-transform font-medium cursor-pointer;
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+    border: none;
+  }
+  .btn-danger:hover {
+    @apply scale-[1.02] shadow-[var(--shadow-elevated)];
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #ef4444 100%);
+  }
+  .btn-danger:active {
+    @apply scale-[0.98];
   }
 }

@@ -23,7 +23,9 @@ export default {
     class="card p-5 md:p-6 flex items-start gap-3 hover:shadow-[var(--shadow-elevated)] transition"
   >
     <div class="w-9 h-9 rounded-lg bg-forest-900 text-white grid place-items-center text-sm">
-      {{ icon }}
+      <slot name="icon">
+        {{ icon }}
+      </slot>
     </div>
     <div class="flex-1 min-w-0">
       <div class="text-sm text-muted">{{ title }}</div>
