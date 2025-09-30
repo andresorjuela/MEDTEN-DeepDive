@@ -20,11 +20,7 @@ import {
 const USE_LIVE = String(import.meta.env.VITE_MOCK_MODE || '').toLowerCase() === 'false'
 
 // Debug logging
-console.log('🔍 Dashboard API Debug:', {
-  VITE_MOCK_MODE: import.meta.env.VITE_MOCK_MODE,
-  USE_LIVE: USE_LIVE,
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-})
+console.log('🔍 Dashboard API Mode:', USE_LIVE ? 'LIVE' : 'MOCK')
 
 function dateWhere(opts = {}) {
   const range = opts.range || '30d'
@@ -63,14 +59,8 @@ function normalizeRows(raw) {
 
 /** Run a HogQL query through the proxy and return { rows } */
 async function query(hogql) {
-  console.log('🚀 Making PostHog API call:', {
-    url: api.defaults.baseURL,
-    query: hogql.substring(0, 100) + '...',
-  })
-
   try {
     const res = await api.post('', { query: hogql }) // axios instance (throws on non-2xx)
-    console.log('✅ PostHog API response:', res.data)
     const rows = normalizeRows(res.data)
     return { rows }
   } catch (error) {
@@ -82,6 +72,24 @@ async function query(hogql) {
 /* -------------------- Live adapters -------------------- */
 
 async function liveGetDashboardKPIs(opts = {}) {
+  // Get ALL events from all time to see what's available
+  const allTimeEvents = await query(`
+    SELECT event, count() as count
+    FROM events
+    GROUP BY event
+    ORDER BY count DESC
+  `)
+
+  // Get events from the last 30 days
+  const allEvents = await query(`
+    SELECT event, count() as count
+    FROM events
+    WHERE timestamp > now() - interval 30 day
+    GROUP BY event
+    ORDER BY count DESC
+  `)
+
+  // Query 1: Base count (inquiries)
   const base = await query(`
     SELECT count(DISTINCT distinct_id)
     FROM events
@@ -90,6 +98,7 @@ async function liveGetDashboardKPIs(opts = {}) {
   `)
   const baseCount = Number(base.rows?.[0]?.[0] ?? 0)
 
+  // Query 2: Total visits
   const visitsQ = await query(`
     SELECT count()
     FROM events
@@ -98,6 +107,7 @@ async function liveGetDashboardKPIs(opts = {}) {
   `)
   const visits = Number(visitsQ.rows?.[0]?.[0] ?? 0)
 
+  // Query 3: Converters (login success)
   const conv = await query(`
     SELECT count(DISTINCT distinct_id)
     FROM events
@@ -106,9 +116,11 @@ async function liveGetDashboardKPIs(opts = {}) {
   `)
   const converters = Number(conv.rows?.[0]?.[0] ?? 0)
 
+  // Calculate derived metrics
   const conversion = baseCount ? (100 * converters) / baseCount : 0
   const dropoff = baseCount ? (100 * (baseCount - converters)) / baseCount : 0
 
+  // Query 4: Hot leads
   const hotQ = await query(`
     SELECT count(DISTINCT distinct_id)
     FROM events
@@ -116,13 +128,29 @@ async function liveGetDashboardKPIs(opts = {}) {
   `)
   const hot = Number(hotQ.rows?.[0]?.[0] ?? 0)
 
-  return [
-    { key: 'inquiries', title: 'Total Inquiries', value: baseCount, delta: 0 },
-    { key: 'visits', title: 'Visits', value: visits, delta: 0 },
-    { key: 'conversion', title: 'Conversion Rate', value: Number(conversion.toFixed(2)), delta: 0 },
-    { key: 'dropoff', title: 'Drop-Off Rate', value: Number(dropoff.toFixed(2)), delta: 0 },
-    { key: 'hot', title: 'Hot Leads', value: hot, delta: 0 },
+  const kpis = [
+    { key: 'total_visits', title: 'Total Visits', value: visits, delta: '+0%' },
+    { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: baseCount, delta: '+0%' },
+    {
+      key: 'drop_off_rate',
+      title: 'Drop Off Rate',
+      value: `${Number(dropoff.toFixed(2))}%`,
+      delta: '+0%',
+    },
+    { key: 'hot_leads', title: 'Hot Leads', value: hot, delta: '+0%' },
   ]
+
+  // Log essential data for debugging
+  console.log('📊 Dashboard KPIs:', {
+    'Total Events Available': allTimeEvents.rows.length,
+    'Total Visits': visits,
+    'Inquiries Submitted': baseCount,
+    'Drop Off Rate': `${Number(dropoff.toFixed(2))}%`,
+    'Hot Leads': hot,
+    'Date Range': opts.range || '7d',
+  })
+
+  return kpis
 }
 
 async function liveGetLeadTypeDistribution(opts = {}) {

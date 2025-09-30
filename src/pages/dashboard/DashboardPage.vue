@@ -39,7 +39,6 @@ export default {
       liveActions: [],
       seoKeywords: [],
       perfIssues: [],
-      filters: { dateRange: '', source: '', brand: '', keyword: '' },
       debugOpen: true,
       debugQuery:
         'SELECT event, count() AS c FROM events WHERE timestamp > now() - interval 30 day GROUP BY event ORDER BY c DESC LIMIT 10',
@@ -78,20 +77,12 @@ export default {
       this.seoKeywords = (await dashboardApi.getSeoKeywords()).rows
       this.perfIssues = (await dashboardApi.getPerfIssues()).rows
     },
-    onFiltersChanged: (() => {
-      let id
-      return function () {
-        clearTimeout(id)
-        id = setTimeout(() => this.loadAllData(), 300)
-      }
-    })(),
     async fetchRecent(page = 1) {
       this.loadingRecent = true
       try {
         const res = await dashboardApi.getRecentLeads({
           page,
           limit: this.recent.limit,
-          ...this.filters,
         })
         this.recent = { ...res, page, limit: this.recent.limit }
       } finally {
@@ -126,38 +117,6 @@ export default {
     <!-- Environment Debug (temporary) -->
     <EnvironmentDebug />
 
-    <!-- Filter bar -->
-    <div class="card p-4 grid gap-3 md:grid-cols-4">
-      <input
-        placeholder="Date Range"
-        v-model="filters.dateRange"
-        @input="onFiltersChanged"
-        class="rounded-lg border border-border px-3 py-2"
-      />
-      <select
-        v-model="filters.source"
-        @change="onFiltersChanged"
-        class="rounded-lg border border-border px-3 py-2"
-      >
-        <option value="">All Sources</option>
-        <option>Organic</option>
-        <option>Paid</option>
-        <option>Referral</option>
-        <option>Direct</option>
-      </select>
-      <input
-        placeholder="Brand"
-        v-model="filters.brand"
-        @input="onFiltersChanged"
-        class="rounded-lg border border-border px-3 py-2"
-      />
-      <input
-        placeholder="Keyword"
-        v-model="filters.keyword"
-        @input="onFiltersChanged"
-        class="rounded-lg border border-border px-3 py-2"
-      />
-    </div>
     <!-- Range control + KPIs -->
     <div class="flex items-center justify-end">
       <label class="text-sm text-muted mr-2">Range</label>
@@ -189,8 +148,44 @@ export default {
         <div class="card p-5"><BaseSkeleton :lines="3" /></div>
       </template>
       <template v-else>
-        <button v-for="k in kpis" :key="k.key" class="text-left" @click="onKpiClick(k.title)">
-          <BaseKpi :title="k.title" :value="k.value" :delta="k.delta" :icon="k.title[0]" />
+        <!-- Total Visits -->
+        <button class="text-left" @click="onKpiClick('Total Visits')">
+          <BaseKpi
+            title="Total Visits"
+            :value="kpis.find((k) => k.key === 'total_visits')?.value || '0'"
+            :delta="kpis.find((k) => k.key === 'total_visits')?.delta || '+0%'"
+            icon="👥"
+          />
+        </button>
+
+        <!-- Inquiries Submitted -->
+        <button class="text-left" @click="onKpiClick('Inquiries Submitted')">
+          <BaseKpi
+            title="Inquiries Submitted"
+            :value="kpis.find((k) => k.key === 'inquiries_submitted')?.value || '0'"
+            :delta="kpis.find((k) => k.key === 'inquiries_submitted')?.delta || '+0%'"
+            icon="📝"
+          />
+        </button>
+
+        <!-- Drop Off Rate -->
+        <button class="text-left" @click="onKpiClick('Drop Off Rate')">
+          <BaseKpi
+            title="Drop Off Rate"
+            :value="kpis.find((k) => k.key === 'drop_off_rate')?.value || '0%'"
+            :delta="kpis.find((k) => k.key === 'drop_off_rate')?.delta || '+0%'"
+            icon="📉"
+          />
+        </button>
+
+        <!-- Hot Leads -->
+        <button class="text-left" @click="onKpiClick('Hot Leads')">
+          <BaseKpi
+            title="Hot Leads"
+            :value="kpis.find((k) => k.key === 'hot_leads')?.value || '0'"
+            :delta="kpis.find((k) => k.key === 'hot_leads')?.delta || '+0%'"
+            icon="🔥"
+          />
         </button>
       </template>
     </div>
