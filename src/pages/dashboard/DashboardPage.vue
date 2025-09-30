@@ -10,7 +10,7 @@ import BarChart from '../../components/charts/BarChart.vue'
 import DonutCard from '../../components/charts/DonutCard.vue'
 import FunnelChart from '../../components/charts/FunnelChart.vue'
 import { events } from '../../analytics/posthog'
-import { dashboardApi } from '../../services/dashboardApi'
+import { useDashboardStore } from '../../stores/dashboard'
 import EnvironmentDebug from '../../components/debug/EnvironmentDebug.vue'
 
 export default {
@@ -26,67 +26,91 @@ export default {
   },
   data() {
     return {
-      kpis: [],
       range: '7d',
-      loadingKpis: false,
-      leadType: { labels: [], data: [] },
-      traffic: { labels: [], data: [] },
-      recent: { items: [], total: 0, page: 1, limit: 10 },
-      topProducts: [],
-      topLanding: [],
-      lostLeads: [],
-      loadingRecent: false,
-      liveActions: [],
-      seoKeywords: [],
-      perfIssues: [],
       debugOpen: true,
       debugQuery:
         'SELECT event, count() AS c FROM events WHERE timestamp > now() - interval 30 day GROUP BY event ORDER BY c DESC LIMIT 10',
       debugResponse: null,
     }
   },
+  computed: {
+    // Access store data through computed properties
+    dashboardStore() {
+      return useDashboardStore()
+    },
+    kpis() {
+      return this.dashboardStore.kpis
+    },
+    loadingKpis() {
+      return this.dashboardStore.kpisLoading
+    },
+    leadType() {
+      return this.dashboardStore.leadTypeDistribution
+    },
+    traffic() {
+      return this.dashboardStore.trafficSourceBreakdown
+    },
+    funnel() {
+      return this.dashboardStore.funnel
+    },
+    recent() {
+      return this.dashboardStore.recentLeads
+    },
+    loadingRecent() {
+      return this.dashboardStore.recentLeadsLoading || false
+    },
+    topProducts() {
+      return this.dashboardStore.topProducts
+    },
+    topLanding() {
+      return this.dashboardStore.topLandingPages
+    },
+    lostLeads() {
+      return this.dashboardStore.lostLeads
+    },
+    liveActions() {
+      return this.dashboardStore.liveActions
+    },
+    seoKeywords() {
+      return this.dashboardStore.seoKeywords
+    },
+    perfIssues() {
+      return this.dashboardStore.perfIssues
+    },
+  },
   mounted() {
     this.loadAllData()
   },
   methods: {
     async loadAllData() {
-      await this.loadKpis()
-      await this.loadCharts()
-      await this.loadTables()
-    },
-    async loadKpis() {
-      this.loadingKpis = true
       try {
-        this.kpis = await dashboardApi.getDashboardKPIs({ range: this.range })
-      } finally {
-        this.loadingKpis = false
+        await this.dashboardStore.fetchAllData(this.range)
+        // Also fetch recent leads separately as it might need different caching
+        await this.dashboardStore.fetchRecentLeads(1, 10)
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
       }
     },
-    async loadCharts() {
-      const rangeOpts = { range: this.range }
-      this.leadType = await dashboardApi.getLeadTypeDistribution(rangeOpts)
-      this.traffic = await dashboardApi.getTrafficSourceBreakdown(rangeOpts)
-      this.funnel = await dashboardApi.getFunnel()
-    },
-    async loadTables() {
-      this.fetchRecent()
-      this.topProducts = (await dashboardApi.getTopProducts()).rows
-      this.topLanding = (await dashboardApi.getTopLandingPages()).rows
-      this.lostLeads = (await dashboardApi.getLostLeads()).rows
-      this.liveActions = (await dashboardApi.getLiveActions()).rows
-      this.seoKeywords = (await dashboardApi.getSeoKeywords()).rows
-      this.perfIssues = (await dashboardApi.getPerfIssues()).rows
+    async onRangeChange() {
+      try {
+        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh for new range
+      } catch (error) {
+        console.error('Error loading data for new range:', error)
+      }
     },
     async fetchRecent(page = 1) {
-      this.loadingRecent = true
       try {
-        const res = await dashboardApi.getRecentLeads({
-          page,
-          limit: this.recent.limit,
-        })
-        this.recent = { ...res, page, limit: this.recent.limit }
-      } finally {
-        this.loadingRecent = false
+        await this.dashboardStore.fetchRecentLeads(page, this.recent.limit)
+      } catch (error) {
+        console.error('Error fetching recent leads:', error)
+      }
+    },
+    async refreshData() {
+      try {
+        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh
+        await this.dashboardStore.fetchRecentLeads(1, 10, true) // Force refresh
+      } catch (error) {
+        console.error('Error refreshing data:', error)
       }
     },
     onKpiClick(name) {
@@ -118,25 +142,39 @@ export default {
     <EnvironmentDebug />
 
     <!-- Range control + KPIs -->
-    <div class="flex items-center justify-end">
-      <label class="text-sm text-muted mr-2">Range</label>
-      <select
-        v-model="range"
-        @change="loadAllData"
-        class="rounded-lg border border-border px-3 py-2 min-w-[180px]"
-      >
-        <option value="24h">Last 24 hours</option>
-        <option value="7d">Last 7 days</option>
-        <option value="14d">Last 14 days</option>
-        <option value="30d">Last 30 days</option>
-        <option value="90d">Last 90 days</option>
-        <option value="180d">Last 180 days</option>
-        <option value="today">Today</option>
-        <option value="yesterday">Yesterday</option>
-        <option value="month">This month</option>
-        <option value="ytd">Year to date</option>
-        <option value="all">All time</option>
-      </select>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <button
+          @click="refreshData"
+          :disabled="dashboardStore.isLoading"
+          class="btn-primary px-3 py-1 text-sm"
+        >
+          {{ dashboardStore.isLoading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+        <span class="text-xs text-muted">
+          Cache: {{ dashboardStore.isKpisCacheValid ? 'Valid' : 'Expired' }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-muted">Range</label>
+        <select
+          v-model="range"
+          @change="onRangeChange"
+          class="rounded-lg border border-border px-3 py-2 min-w-[180px]"
+        >
+          <option value="24h">Last 24 hours</option>
+          <option value="7d">Last 7 days</option>
+          <option value="14d">Last 14 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="90d">Last 90 days</option>
+          <option value="180d">Last 180 days</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="month">This month</option>
+          <option value="ytd">Year to date</option>
+          <option value="all">All time</option>
+        </select>
+      </div>
     </div>
 
     <!-- KPIs -->
