@@ -123,7 +123,9 @@
 
           <div class="space-y-3 sm:space-y-4">
             <div class="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h3 class="font-semibold text-blue-800 mb-2 text-sm sm:text-base flex items-center gap-2">
+              <h3
+                class="font-semibold text-blue-800 mb-2 text-sm sm:text-base flex items-center gap-2"
+              >
                 <Icon name="users" :size="16" color="#1e40af" />
                 Total Visits
               </h3>
@@ -135,7 +137,9 @@
             </div>
 
             <div class="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h3 class="font-semibold text-green-800 mb-2 text-sm sm:text-base flex items-center gap-2">
+              <h3
+                class="font-semibold text-green-800 mb-2 text-sm sm:text-base flex items-center gap-2"
+              >
                 <Icon name="fileText" :size="16" color="#166534" />
                 Inquiries Submitted
               </h3>
@@ -151,7 +155,9 @@
             </div>
 
             <div class="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h3 class="font-semibold text-red-800 mb-2 text-sm sm:text-base flex items-center gap-2">
+              <h3
+                class="font-semibold text-red-800 mb-2 text-sm sm:text-base flex items-center gap-2"
+              >
                 <Icon name="trendingDown" :size="16" color="#dc2626" />
                 Drop Off Rate
               </h3>
@@ -164,7 +170,9 @@
             </div>
 
             <div class="p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <h3 class="font-semibold text-orange-800 mb-2 text-sm sm:text-base flex items-center gap-2">
+              <h3
+                class="font-semibold text-orange-800 mb-2 text-sm sm:text-base flex items-center gap-2"
+              >
                 <Icon name="flame" :size="16" color="#ea580c" />
                 Hot Leads
               </h3>

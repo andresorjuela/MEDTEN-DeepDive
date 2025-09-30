@@ -80,7 +80,7 @@ export const useDashboardStore = defineStore('dashboard', {
         this.kpis = await dashboardApi.getDashboardKPIs({ range })
         this.kpisRange = range
         this.kpisLastFetched = Date.now()
-        console.log('📊 KPIs cached successfully')
+        console.log('📊 KPIs cached successfully:', this.kpis)
         return this.kpis
       } catch (error) {
         console.error('❌ Error fetching KPIs:', error)

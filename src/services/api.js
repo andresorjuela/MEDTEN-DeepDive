@@ -17,7 +17,7 @@ const getApiBaseUrl = () => {
 
   // Always use Lambda/API Gateway (both local and production)
   console.log('✅ Using AWS Lambda/API Gateway')
-  return 'https://rnmhuyxd2k.execute-api.us-west-1.amazonaws.com/prod/posthog-query'
+  return 'https://rnmhuyxd2k.execute-api.us-west-1.amazonaws.com/default'
 }
 
 const api = axios.create({

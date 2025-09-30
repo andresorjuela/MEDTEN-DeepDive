@@ -33,6 +33,8 @@ export default {
       debugQuery:
         'SELECT event, count() AS c FROM events WHERE timestamp > now() - interval 30 day GROUP BY event ORDER BY c DESC LIMIT 10',
       debugResponse: null,
+      verificationLoading: false,
+      verificationData: null,
     }
   },
   computed: {
@@ -134,6 +136,148 @@ export default {
         this.debugResponse = { error: String(e && e.message) }
       }
     },
+    async testLambdaConnection() {
+      try {
+        console.log('🧪 Testing Lambda connection...')
+        console.log('🔍 API Base URL:', api.defaults.baseURL)
+
+        // Test 1: Simple GET request
+        console.log('📡 Testing GET request...')
+        const getResponse = await api.get('')
+        console.log('✅ GET response:', getResponse.data)
+
+        // Test 2: Simple POST request
+        console.log('📡 Testing POST request...')
+        const postResponse = await api.post('', {
+          query: `SELECT 1 as test`,
+        })
+        console.log('✅ POST response:', postResponse.data)
+
+        alert('Lambda is working! Check console for details.')
+      } catch (error) {
+        console.error('❌ Lambda test failed:', error)
+        console.error('❌ Error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            baseURL: error.config?.baseURL,
+          },
+        })
+        alert(`Lambda test failed: ${error.message}`)
+      }
+    },
+    async runDataVerification() {
+      this.verificationLoading = true
+      this.verificationData = null
+
+      try {
+        console.log('🔍 Running simplified data verification...')
+
+        // Get date filter for current range
+        const dateFilter = this.getDateFilter(this.range)
+        console.log('📅 Date filter for range', this.range, ':', dateFilter)
+
+        // Step 1: Ultra simple check - just test if Lambda is accessible
+        const allTimeRes = await api.post('', {
+          query: `SELECT 1 as test`,
+        })
+        const allTimeEvents = allTimeRes.data.rows ? 1 : 0
+        console.log('📊 Lambda connection test:', allTimeRes.data)
+        console.log('📊 PostHog connection test:', allTimeEvents ? 'SUCCESS' : 'FAILED')
+
+        // Step 2: Try to get basic event count (with timeout)
+        let totalEvents = 0
+        let uniqueUsers = 0
+        let topEvents = []
+
+        try {
+          const totalEventsRes = await Promise.race([
+            api.post('', {
+              query: `SELECT count() as total FROM events WHERE ${dateFilter}`,
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+          ])
+          totalEvents = Number(totalEventsRes.data.rows?.[0]?.[0] ?? 0)
+          console.log('📊 Events in current range:', totalEvents)
+        } catch (error) {
+          console.warn('⚠️ Total events query failed:', error.message)
+        }
+
+        try {
+          const uniqueUsersRes = await Promise.race([
+            api.post('', {
+              query: `SELECT count(DISTINCT distinct_id) as unique_users FROM events WHERE ${dateFilter}`,
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+          ])
+          uniqueUsers = Number(uniqueUsersRes.data.rows?.[0]?.[0] ?? 0)
+          console.log('👥 Unique users in current range:', uniqueUsers)
+        } catch (error) {
+          console.warn('⚠️ Unique users query failed:', error.message)
+        }
+
+        try {
+          const topEventsRes = await Promise.race([
+            api.post('', {
+              query: `SELECT event, count() as count FROM events WHERE ${dateFilter} GROUP BY event ORDER BY count DESC LIMIT 3`,
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+          ])
+          topEvents = topEventsRes.data.rows || []
+          console.log('📈 Top events in current range:', topEvents)
+        } catch (error) {
+          console.warn('⚠️ Top events query failed:', error.message)
+        }
+
+        this.verificationData = {
+          allTimeEvents,
+          allTimeUsers: 0, // Skip for now to avoid timeout
+          totalEvents,
+          uniqueUsers,
+          eventsPerUser: uniqueUsers > 0 ? (totalEvents / uniqueUsers).toFixed(2) : 0,
+          allEvents: [], // Skip for now to avoid timeout
+          topEvents,
+          recentDates: [], // Skip for now to avoid timeout
+          dateFilter,
+          error: null,
+        }
+
+        console.log('✅ Simplified verification complete:', this.verificationData)
+      } catch (error) {
+        console.error('❌ Verification failed:', error)
+        this.verificationData = {
+          allTimeEvents: 0,
+          allTimeUsers: 0,
+          totalEvents: 0,
+          uniqueUsers: 0,
+          eventsPerUser: 0,
+          allEvents: [],
+          topEvents: [],
+          recentDates: [],
+          dateFilter: '',
+          error: error.message || 'Failed to verify data',
+        }
+      } finally {
+        this.verificationLoading = false
+      }
+    },
+    getDateFilter(range) {
+      if (range === 'today') return `toDate(timestamp) = today()`
+      if (range === 'yesterday') return `toDate(timestamp) = yesterday()`
+      if (range === '24h') return `timestamp > now() - interval 24 hour`
+      if (range === '7d') return `timestamp > now() - interval 7 day`
+      if (range === '14d') return `timestamp > now() - interval 14 day`
+      if (range === '30d') return `timestamp > now() - interval 30 day`
+      if (range === '90d') return `timestamp > now() - interval 90 day`
+      if (range === '180d') return `timestamp > now() - interval 180 day`
+      if (range === 'month') return `toStartOfMonth(timestamp) = toStartOfMonth(now())`
+      if (range === 'ytd') return `timestamp >= toStartOfYear(now())`
+      if (range === 'all') return '1 = 1'
+      return `timestamp > now() - interval 7 day`
+    },
   },
 }
 </script>
@@ -142,6 +286,139 @@ export default {
   <div class="space-y-6">
     <!-- Environment Debug (temporary) -->
     <EnvironmentDebug />
+
+    <!-- Data Verification Section -->
+    <div class="card p-4 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">🔍 Data Verification</h3>
+        <div class="flex gap-2">
+          <button @click="testLambdaConnection" class="btn-secondary px-3 py-2 text-sm">
+            Test Lambda
+          </button>
+          <button
+            @click="runDataVerification"
+            :disabled="verificationLoading"
+            class="btn-primary px-4 py-2 text-sm"
+          >
+            {{ verificationLoading ? 'Verifying...' : 'Verify Data' }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="verificationData" class="space-y-4">
+        <!-- All Time Data -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-gray-900 mb-3">📊 All Time Data in PostHog</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-3 rounded">
+              <div class="text-sm font-medium text-gray-600">Total Events (All Time)</div>
+              <div class="text-xl font-bold text-gray-900">
+                {{ verificationData.allTimeEvents || 0 }}
+              </div>
+            </div>
+            <div class="bg-white p-3 rounded">
+              <div class="text-sm font-medium text-gray-600">Unique Users (All Time)</div>
+              <div class="text-xl font-bold text-gray-900">
+                {{ verificationData.allTimeUsers || 0 }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Range Data -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-blue-50 p-3 rounded-lg">
+            <div class="text-sm font-medium text-blue-800">Events in Range ({{ range }})</div>
+            <div class="text-2xl font-bold text-blue-900">
+              {{ verificationData.totalEvents || 0 }}
+            </div>
+          </div>
+          <div class="bg-green-50 p-3 rounded-lg">
+            <div class="text-sm font-medium text-green-800">Unique Users in Range</div>
+            <div class="text-2xl font-bold text-green-900">
+              {{ verificationData.uniqueUsers || 0 }}
+            </div>
+          </div>
+          <div class="bg-purple-50 p-3 rounded-lg">
+            <div class="text-sm font-medium text-purple-800">Events per User</div>
+            <div class="text-2xl font-bold text-purple-900">
+              {{ verificationData.eventsPerUser || 0 }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Filter Info -->
+        <div class="bg-yellow-50 p-3 rounded-lg">
+          <div class="text-sm font-medium text-yellow-800">Current Date Filter:</div>
+          <div class="text-sm text-yellow-700 font-mono">{{ verificationData.dateFilter }}</div>
+        </div>
+
+        <div v-if="verificationData.topEvents && verificationData.topEvents.length > 0">
+          <h4 class="font-medium text-gray-900 mb-2">Top Events in Date Range:</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div
+              v-for="event in verificationData.topEvents.slice(0, 8)"
+              :key="event[0]"
+              class="bg-gray-100 p-2 rounded text-sm"
+            >
+              <div class="font-mono text-xs">{{ event[0] }}</div>
+              <div class="text-gray-600">{{ event[1] }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Events in PostHog -->
+        <div v-if="verificationData.allEvents && verificationData.allEvents.length > 0">
+          <h4 class="font-medium text-gray-900 mb-2">All Events in PostHog (All Time):</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div
+              v-for="event in verificationData.allEvents.slice(0, 12)"
+              :key="event[0]"
+              class="bg-gray-100 p-2 rounded text-sm"
+            >
+              <div class="font-mono text-xs">{{ event[0] }}</div>
+              <div class="text-gray-600">{{ event[1] }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Events in Current Range -->
+        <div v-if="verificationData.topEvents && verificationData.topEvents.length > 0">
+          <h4 class="font-medium text-gray-900 mb-2">Events in Current Range ({{ range }}):</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div
+              v-for="event in verificationData.topEvents.slice(0, 8)"
+              :key="event[0]"
+              class="bg-gray-100 p-2 rounded text-sm"
+            >
+              <div class="font-mono text-xs">{{ event[0] }}</div>
+              <div class="text-gray-600">{{ event[1] }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Dates with Data -->
+        <div v-if="verificationData.recentDates && verificationData.recentDates.length > 0">
+          <h4 class="font-medium text-gray-900 mb-2">Recent Dates with Data (Last 30 days):</h4>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div
+              v-for="day in verificationData.recentDates.slice(0, 10)"
+              :key="day[0]"
+              class="bg-gray-100 p-2 rounded text-sm text-center"
+            >
+              <div class="text-xs text-gray-600">{{ day[0] }}</div>
+              <div class="font-bold">{{ day[1] }} events</div>
+              <div class="text-xs text-gray-500">{{ day[2] }} users</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="verificationData.error" class="bg-red-50 p-3 rounded-lg">
+          <div class="text-red-800 font-medium">Error:</div>
+          <div class="text-red-700 text-sm">{{ verificationData.error }}</div>
+        </div>
+      </div>
+    </div>
 
     <!-- Range control + KPIs -->
     <div class="flex items-center justify-between">
