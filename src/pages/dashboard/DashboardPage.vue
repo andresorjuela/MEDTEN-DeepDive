@@ -106,7 +106,11 @@ export default {
     },
     async onRangeChange() {
       try {
+        console.log('📅 Range changed to:', this.range, '- clearing cache and fetching fresh data')
+        this.dashboardStore.clearCache() // Clear cache first
+        this.dashboardStore.setCacheTimeout(1000) // Set very short cache (1 second) for immediate updates
         await this.dashboardStore.fetchAllData(this.range, true) // Force refresh for new range
+        this.dashboardStore.setCacheTimeout(30000) // Reset to normal cache timeout (30 seconds)
       } catch (error) {
         console.error('Error loading data for new range:', error)
       }

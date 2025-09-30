@@ -129,10 +129,16 @@
                 <Icon name="users" :size="16" color="#1e40af" />
                 Total Visits
               </h3>
-              <p class="text-blue-700 text-xs sm:text-sm mb-2">Count of all page view events</p>
+              <p class="text-blue-700 text-xs sm:text-sm mb-2">
+                Count of unique users who performed any event (one user = one visit, regardless of
+                number of events)
+              </p>
               <div class="text-xs text-blue-600 bg-blue-100 p-2 rounded font-mono overflow-x-auto">
-                SELECT count() FROM events WHERE event IN
-                ('LANDING_PAGE_VIEW','$pageview','page_view','Pageview')
+                SELECT count(DISTINCT distinct_id) FROM events WHERE timestamp > now() - interval 7
+                day
+              </div>
+              <div class="mt-2 text-xs text-blue-600">
+                <strong>Rule:</strong> One user performing multiple events = One visit only
               </div>
             </div>
 
