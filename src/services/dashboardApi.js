@@ -99,27 +99,18 @@ async function liveGetDashboardKPIs(opts = {}) {
   const baseCount = Number(base.rows?.[0]?.[0] ?? 0)
 
   // Query 2: Total visits (unique users per day - any event counts as visit)
+  // Rule: One user = One visit per day, regardless of number of events
   let visits = 0
   try {
     const visitsQ = await query(`
-      SELECT count(*)
-      FROM (
-        SELECT distinct_id, toDate(timestamp) as date
-        FROM events
-        WHERE ${dateWhere(opts)}
-        GROUP BY distinct_id, date
-      )
-    `)
-    visits = Number(visitsQ.rows?.[0]?.[0] ?? 0)
-  } catch (error) {
-    console.warn('⚠️ Complex visit query failed, using fallback:', error)
-    // Fallback: simple unique users count
-    const fallbackQ = await query(`
       SELECT count(DISTINCT distinct_id)
       FROM events
       WHERE ${dateWhere(opts)}
     `)
-    visits = Number(fallbackQ.rows?.[0]?.[0] ?? 0)
+    visits = Number(visitsQ.rows?.[0]?.[0] ?? 0)
+  } catch (error) {
+    console.warn('⚠️ Visit query failed:', error)
+    visits = 0
   }
 
   // Query 3: Converters (login success)
@@ -154,6 +145,12 @@ async function liveGetDashboardKPIs(opts = {}) {
     },
     { key: 'hot_leads', title: 'Hot Leads', value: hot, delta: '+0%' },
   ]
+
+  console.log('🔍 API Debug - Total Visits calculation:', {
+    'visits variable': visits,
+    'kpis[0].value': kpis[0].value,
+    'API returned visits': visits,
+  })
 
   // Log essential data for debugging
   console.log('📊 Dashboard KPIs:', {

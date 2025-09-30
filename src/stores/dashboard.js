@@ -81,6 +81,10 @@ export const useDashboardStore = defineStore('dashboard', {
         this.kpisRange = range
         this.kpisLastFetched = Date.now()
         console.log('📊 KPIs cached successfully:', this.kpis)
+        console.log(
+          '📊 Total Visits value:',
+          this.kpis.find((k) => k.key === 'total_visits')?.value,
+        )
         return this.kpis
       } catch (error) {
         console.error('❌ Error fetching KPIs:', error)

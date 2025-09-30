@@ -126,6 +126,17 @@ export default {
         console.error('Error refreshing data:', error)
       }
     },
+    async clearCacheAndRefresh() {
+      try {
+        console.log('🧹 Clearing cache and refreshing data...')
+        this.dashboardStore.clearCache()
+        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh
+        await this.dashboardStore.fetchRecentLeads(1, 10, true) // Force refresh
+        console.log('✅ Cache cleared and data refreshed')
+      } catch (error) {
+        console.error('Error clearing cache and refreshing:', error)
+      }
+    },
     onKpiClick(name) {
       events.kpi_clicked(name)
     },
@@ -440,6 +451,14 @@ export default {
         >
           <Icon name="refresh" :size="16" :class="{ 'animate-spin': dashboardStore.isLoading }" />
           {{ dashboardStore.isLoading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+        <button
+          @click="clearCacheAndRefresh"
+          :disabled="dashboardStore.isLoading"
+          class="btn-secondary px-3 py-1 text-sm flex items-center gap-2"
+        >
+          <Icon name="trash-2" :size="16" />
+          Clear Cache
         </button>
         <span class="text-xs text-muted">
           Cache: {{ dashboardStore.isKpisCacheValid ? 'Valid' : 'Expired' }}

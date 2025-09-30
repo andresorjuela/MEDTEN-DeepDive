@@ -28,6 +28,7 @@ import {
   Shield,
   Thermometer,
   Snowflake,
+  Trash2,
   XCircle,
   Database,
 } from 'lucide-vue-next'
@@ -82,6 +83,7 @@ export default {
         shield: Shield,
         thermometer: Thermometer,
         snowflake: Snowflake,
+        trash2: Trash2,
         xCircle: XCircle,
         database: Database,
       }
