@@ -86,6 +86,15 @@ export default {
     this.loadAllData()
   },
   methods: {
+    // Normalize various PostHog response shapes into rows (array of arrays)
+    normalizeRows(raw) {
+      if (Array.isArray(raw)) return raw
+      const r = raw?.results
+      if (Array.isArray(r?.[0]?.results)) return r[0].results
+      if (Array.isArray(r)) return r
+      if (Array.isArray(r?.[0])) return r[0]
+      return []
+    },
     async loadAllData() {
       try {
         await this.dashboardStore.fetchAllData(this.range)
@@ -146,10 +155,10 @@ export default {
         const getResponse = await api.get('')
         console.log('✅ GET response:', getResponse.data)
 
-        // Test 2: Simple POST request
+        // Test 2: Simple POST request with actual data
         console.log('📡 Testing POST request...')
         const postResponse = await api.post('', {
-          query: `SELECT 1 as test`,
+          query: `SELECT count() as total FROM events LIMIT 1`,
         })
         console.log('✅ POST response:', postResponse.data)
 
@@ -174,78 +183,79 @@ export default {
       this.verificationData = null
 
       try {
-        console.log('🔍 Running simplified data verification...')
+        console.log('🔍 Running ultra-simple data verification...')
 
         // Get date filter for current range
         const dateFilter = this.getDateFilter(this.range)
         console.log('📅 Date filter for range', this.range, ':', dateFilter)
 
-        // Step 1: Ultra simple check - just test if Lambda is accessible
-        const allTimeRes = await api.post('', {
-          query: `SELECT 1 as test`,
-        })
-        const allTimeEvents = allTimeRes.data.rows ? 1 : 0
-        console.log('📊 Lambda connection test:', allTimeRes.data)
-        console.log('📊 PostHog connection test:', allTimeEvents ? 'SUCCESS' : 'FAILED')
+        // Step 1: Test basic connectivity with minimal query
+        let allTimeEvents = 0
+        try {
+          const allTimeRes = await api.post('', {
+            query: `SELECT 1 as test`,
+          })
+          console.log('📊 Basic connectivity test:', allTimeRes.data)
+          allTimeEvents = 1 // If we get here, we have connectivity
+        } catch (error) {
+          console.error('❌ Basic connectivity failed:', error.message)
+          throw error
+        }
 
-        // Step 2: Try to get basic event count (with timeout)
+        // Step 2: Try to get actual data with very simple queries
         let totalEvents = 0
         let uniqueUsers = 0
         let topEvents = []
 
+        // Try to get total events with a very simple query
         try {
-          const totalEventsRes = await Promise.race([
-            api.post('', {
-              query: `SELECT count() as total FROM events WHERE ${dateFilter}`,
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
-          ])
-          totalEvents = Number(totalEventsRes.data.rows?.[0]?.[0] ?? 0)
-          console.log('📊 Events in current range:', totalEvents)
+          const totalEventsRes = await api.post('', {
+            query: `SELECT count() FROM events WHERE timestamp > now() - interval 7 day`,
+          })
+          const totalRows = this.normalizeRows(totalEventsRes.data)
+          totalEvents = Number(totalRows?.[0]?.[0] ?? 0)
+          console.log('📊 Events in last 7 days:', totalEvents)
         } catch (error) {
-          console.warn('⚠️ Total events query failed:', error.message)
+          console.warn('⚠️ Events query failed:', error.message)
         }
 
+        // Try to get unique users with a very simple query
         try {
-          const uniqueUsersRes = await Promise.race([
-            api.post('', {
-              query: `SELECT count(DISTINCT distinct_id) as unique_users FROM events WHERE ${dateFilter}`,
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
-          ])
-          uniqueUsers = Number(uniqueUsersRes.data.rows?.[0]?.[0] ?? 0)
-          console.log('👥 Unique users in current range:', uniqueUsers)
+          const uniqueUsersRes = await api.post('', {
+            query: `SELECT count(DISTINCT distinct_id) FROM events WHERE timestamp > now() - interval 7 day`,
+          })
+          const userRows = this.normalizeRows(uniqueUsersRes.data)
+          uniqueUsers = Number(userRows?.[0]?.[0] ?? 0)
+          console.log('👥 Unique users in last 7 days:', uniqueUsers)
         } catch (error) {
           console.warn('⚠️ Unique users query failed:', error.message)
         }
 
+        // Try to get top events with a very simple query
         try {
-          const topEventsRes = await Promise.race([
-            api.post('', {
-              query: `SELECT event, count() as count FROM events WHERE ${dateFilter} GROUP BY event ORDER BY count DESC LIMIT 3`,
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
-          ])
-          topEvents = topEventsRes.data.rows || []
-          console.log('📈 Top events in current range:', topEvents)
+          const topEventsRes = await api.post('', {
+            query: `SELECT event, count() FROM events WHERE timestamp > now() - interval 7 day GROUP BY event ORDER BY count DESC LIMIT 2`,
+          })
+          topEvents = this.normalizeRows(topEventsRes.data) || []
+          console.log('📈 Top events in last 7 days:', topEvents)
         } catch (error) {
           console.warn('⚠️ Top events query failed:', error.message)
         }
 
         this.verificationData = {
           allTimeEvents,
-          allTimeUsers: 0, // Skip for now to avoid timeout
+          allTimeUsers: 0, // Skip for now
           totalEvents,
           uniqueUsers,
           eventsPerUser: uniqueUsers > 0 ? (totalEvents / uniqueUsers).toFixed(2) : 0,
-          allEvents: [], // Skip for now to avoid timeout
+          allEvents: [], // Skip for now
           topEvents,
-          recentDates: [], // Skip for now to avoid timeout
+          recentDates: [], // Skip for now
           dateFilter,
           error: null,
         }
 
-        console.log('✅ Simplified verification complete:', this.verificationData)
+        console.log('✅ Ultra-simple verification complete:', this.verificationData)
       } catch (error) {
         console.error('❌ Verification failed:', error)
         this.verificationData = {
