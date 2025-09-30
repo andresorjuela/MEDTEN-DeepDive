@@ -1,23 +1,83 @@
 <script>
-export default { name: 'AppSidebar' }
+export default {
+  name: 'AppSidebar',
+  data() {
+    return {
+      isMobileMenuOpen: false,
+    }
+  },
+  methods: {
+    toggleMobileMenu() {
+      this.isMobileMenuOpen = !this.isMobileMenuOpen
+    },
+    closeMobileMenu() {
+      this.isMobileMenuOpen = false
+    },
+    handleNavigation(navigate) {
+      navigate()
+      this.closeMobileMenu()
+    },
+  },
+}
 </script>
 
 <template>
-  <aside
-    class="hidden lg:flex lg:w-[240px] lg:flex-col bg-forest-900 text-white min-h-screen sticky top-0"
+  <!-- Mobile Menu Button -->
+  <button
+    @click="toggleMobileMenu"
+    class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-forest-900 text-white rounded-lg shadow-lg"
   >
-    <div class="h-16 px-4 flex items-center gap-3 border-b border-white/10">
-      <div class="w-9 h-9 rounded-lg bg-white text-forest-900 grid place-items-center font-bold">
-        M
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+  </button>
+
+  <!-- Mobile Overlay -->
+  <div
+    v-if="isMobileMenuOpen"
+    @click="closeMobileMenu"
+    class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+  ></div>
+
+  <!-- Sidebar -->
+  <aside
+    :class="[
+      'bg-forest-900 text-white min-h-screen sticky top-0 transition-transform duration-300',
+      'lg:flex lg:w-[240px] lg:flex-col lg:translate-x-0',
+      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
+      'fixed lg:relative w-[240px] z-50 lg:z-auto',
+    ]"
+  >
+    <div class="h-16 px-4 flex items-center justify-between border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-white text-forest-900 grid place-items-center font-bold">
+          M
+        </div>
+        <div class="font-semibold">Medten DeepDive</div>
       </div>
-      <div class="font-semibold">Medten DeepDive</div>
+      <!-- Close button for mobile -->
+      <button @click="closeMobileMenu" class="lg:hidden p-1 text-white/60 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
     </div>
     <div class="px-4 pt-4 pb-2 text-xs tracking-[0.15em] text-white/60">MENU</div>
     <nav class="px-2 space-y-1 text-sm">
       <RouterLink to="/dashboard" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
@@ -39,7 +99,7 @@ export default { name: 'AppSidebar' }
       <RouterLink to="/insights/seo" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
@@ -61,7 +121,7 @@ export default { name: 'AppSidebar' }
       <RouterLink to="/leads" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
@@ -83,7 +143,7 @@ export default { name: 'AppSidebar' }
       <RouterLink to="/insights/products" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
@@ -104,6 +164,7 @@ export default { name: 'AppSidebar' }
 
       <router-link
         to="/insights/search"
+        @click="closeMobileMenu"
         class="flex items-center gap-3 px-3 py-2 rounded-lg transition text-white/80 hover:bg-white/10"
         active-class="bg-white/10 text-white"
       >
@@ -121,6 +182,7 @@ export default { name: 'AppSidebar' }
 
       <router-link
         to="/insights/paths"
+        @click="closeMobileMenu"
         class="flex items-center gap-3 px-3 py-2 rounded-lg transition text-white/80 hover:bg-white/10"
         active-class="bg-white/10 text-white"
       >
@@ -139,7 +201,7 @@ export default { name: 'AppSidebar' }
       <RouterLink to="/leads" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition justify-between',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
@@ -187,12 +249,38 @@ export default { name: 'AppSidebar' }
     </nav>
 
     <div class="mt-6 mx-4 border-t border-white/10"></div>
+    <div class="px-4 pt-4 pb-2 text-xs tracking-[0.15em] text-white/60">RULES</div>
+    <nav class="px-2 space-y-1 text-sm">
+      <RouterLink to="/rules" v-slot="{ href, navigate, isActive }">
+        <a
+          :href="href"
+          @click.prevent="handleNavigation(navigate)"
+          :class="[
+            'flex items-center gap-3 px-3 py-2 rounded-lg transition',
+            isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
+          ]"
+        >
+          <svg
+            class="w-5 h-5 text-white/80"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Lead Rules</span>
+        </a>
+      </RouterLink>
+    </nav>
+
+    <div class="mt-6 mx-4 border-t border-white/10"></div>
     <div class="px-4 pt-4 pb-2 text-xs tracking-[0.15em] text-white/60">GENERAL</div>
     <nav class="px-2 space-y-1 text-sm pb-6">
       <RouterLink to="/settings" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',
@@ -213,7 +301,7 @@ export default { name: 'AppSidebar' }
       <RouterLink to="/settings" v-slot="{ href, navigate, isActive }">
         <a
           :href="href"
-          @click.prevent="navigate"
+          @click.prevent="handleNavigation(navigate)"
           :class="[
             'flex items-center gap-3 px-3 py-2 rounded-lg transition',
             isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/10',

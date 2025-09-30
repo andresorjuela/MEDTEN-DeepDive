@@ -14,6 +14,7 @@ const SearchInsightsPage = () => import('../pages/insights/SearchInsightsPage.vu
 const SearchTermDetailPage = () => import('../pages/insights/SearchTermDetailPage.vue')
 const PathsInsightsPage = () => import('../pages/insights/PathsInsightsPage.vue')
 const SettingsPage = () => import('../pages/settings/SettingsPage.vue')
+const RulesPage = () => import('../pages/RulesPage.vue')
 const AppShell = () => import('../components/layout/AppShell.vue')
 
 const router = createRouter({
@@ -53,6 +54,7 @@ const router = createRouter({
         },
         { path: 'insights/paths', name: 'paths-insights', component: PathsInsightsPage },
         { path: 'insights/products', name: 'product-insights', component: ProductInsightsPage },
+        { path: 'rules', name: 'rules', component: RulesPage },
         { path: 'settings', name: 'settings', component: SettingsPage },
       ],
     },
