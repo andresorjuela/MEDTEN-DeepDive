@@ -143,7 +143,7 @@ export default {
         <h1 class="text-2xl sm:text-3xl font-semibold text-heading">Welcome Back</h1>
         <p class="text-xs sm:text-sm text-muted mb-4 sm:mb-6">Please enter your details</p>
 
-        <form @submit.prevent="onSubmit" class="space-y-3 sm:space-y-4">
+        <form @submit.prevent="onSubmit" novalidate class="space-y-3 sm:space-y-4">
           <!-- Email field -->
           <BaseInput
             v-model="email"
@@ -152,7 +152,7 @@ export default {
             autocomplete="email"
             :validation-rules="emailRules"
             :validate-on-blur="true"
-            :validate-on-input="false"
+            :validate-on-input="true"
             @validation-change="onEmailValidationChange"
           />
 
@@ -164,7 +164,7 @@ export default {
             autocomplete="current-password"
             :validation-rules="passwordRules"
             :validate-on-blur="true"
-            :validate-on-input="false"
+            :validate-on-input="true"
             @validation-change="onPasswordValidationChange"
           />
 
@@ -233,7 +233,7 @@ export default {
             Enter your email address and we'll send you a link to reset your password.
           </p>
 
-          <form @submit.prevent="sendResetEmail" class="space-y-3 sm:space-y-4">
+          <form @submit.prevent="sendResetEmail" novalidate class="space-y-3 sm:space-y-4">
             <BaseInput
               v-model="resetEmail"
               type="email"

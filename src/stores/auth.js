@@ -38,6 +38,11 @@ export const useAuthStore = defineStore('auth', {
         if (session) {
           this.session = session
           this.user = session.user
+          try {
+            const accessToken =
+              session.access_token || session?.access_token || session?.provider_token
+            if (accessToken) localStorage.setItem('token', accessToken)
+          } catch {}
           console.log('User session restored:', this.user.email)
         }
       } catch (error) {
@@ -63,6 +68,10 @@ export const useAuthStore = defineStore('auth', {
 
         this.session = data.session
         this.user = data.user
+        try {
+          const accessToken = data.session?.access_token
+          if (accessToken) localStorage.setItem('token', accessToken)
+        } catch {}
         console.log('User logged in:', this.user.email)
         return true
       } catch (error) {
@@ -84,6 +93,9 @@ export const useAuthStore = defineStore('auth', {
 
         this.user = null
         this.session = null
+        try {
+          localStorage.removeItem('token')
+        } catch {}
         console.log('User logged out')
       } catch (error) {
         console.error('Logout error:', error)

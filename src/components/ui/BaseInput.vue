@@ -319,7 +319,9 @@ export default {
 
 /* Custom focus styles for better accessibility */
 input:focus {
-  @apply ring-2 ring-blue-500 ring-opacity-50;
+  /* Rely on utility classes provided via :class on the input element.
+     This avoids Tailwind build errors for unknown ring colors in some setups. */
+  outline: none;
 }
 
 /* Animation for validation states */
