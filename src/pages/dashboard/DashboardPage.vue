@@ -308,15 +308,17 @@ export default {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Environment Debug (temporary) -->
     <EnvironmentDebug />
 
     <!-- Data Verification Section -->
-    <div class="card p-4 mb-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">🔍 Data Verification</h3>
-        <div class="flex gap-2">
+    <div class="card p-3 sm:p-4 mb-4 sm:mb-6">
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4"
+      >
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">🔍 Data Verification</h3>
+        <div class="flex flex-wrap gap-2">
           <button @click="testLambdaConnection" class="btn-secondary px-3 py-2 text-sm">
             Test Lambda
           </button>
@@ -351,7 +353,7 @@ export default {
         </div>
 
         <!-- Current Range Data -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm font-medium text-blue-800">Events in Range ({{ range }})</div>
             <div class="text-2xl font-bold text-blue-900">
@@ -446,53 +448,66 @@ export default {
     </div>
 
     <!-- Range control + KPIs -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <button
-          @click="refreshData"
-          :disabled="dashboardStore.isLoading"
-          class="btn-primary px-3 py-1 text-sm flex items-center gap-2"
-        >
-          <Icon name="refresh" :size="16" :class="{ 'animate-spin': dashboardStore.isLoading }" />
-          {{ dashboardStore.isLoading ? 'Refreshing...' : 'Refresh' }}
-        </button>
-        <button
-          @click="clearCacheAndRefresh"
-          :disabled="dashboardStore.isLoading"
-          class="btn-secondary px-3 py-1 text-sm flex items-center gap-2"
-        >
-          <Icon name="trash-2" :size="16" />
-          Clear Cache
-        </button>
-        <span class="text-xs text-muted">
-          Cache: {{ dashboardStore.isKpisCacheValid ? 'Valid' : 'Expired' }}
-        </span>
-      </div>
-      <div class="flex items-center gap-2">
-        <Icon name="calendar" :size="16" class="text-muted" />
-        <label class="text-sm text-muted">Range</label>
-        <select
-          v-model="range"
-          @change="onRangeChange"
-          class="rounded-lg border border-border px-3 py-2 min-w-[180px]"
-        >
-          <option value="24h">Last 24 hours</option>
-          <option value="7d">Last 7 days</option>
-          <option value="14d">Last 14 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-          <option value="180d">Last 180 days</option>
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="month">This month</option>
-          <option value="ytd">Year to date</option>
-          <option value="all">All time</option>
-        </select>
+    <div class="flex flex-col gap-3">
+      <!-- Mobile-first controls -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button
+              @click="refreshData"
+              :disabled="dashboardStore.isLoading"
+              class="btn-primary px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2"
+            >
+              <Icon
+                name="refresh"
+                :size="14"
+                :class="{ 'animate-spin': dashboardStore.isLoading }"
+              />
+              <span class="hidden sm:inline">{{
+                dashboardStore.isLoading ? 'Refreshing...' : 'Refresh'
+              }}</span>
+              <span class="sm:hidden">{{ dashboardStore.isLoading ? '...' : '↻' }}</span>
+            </button>
+            <button
+              @click="clearCacheAndRefresh"
+              :disabled="dashboardStore.isLoading"
+              class="btn-secondary px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2"
+            >
+              <Icon name="trash-2" :size="14" />
+              <span class="hidden sm:inline">Clear Cache</span>
+              <span class="sm:hidden">Clear</span>
+            </button>
+          </div>
+          <span class="text-[10px] sm:text-xs text-muted">
+            Cache: {{ dashboardStore.isKpisCacheValid ? 'Valid' : 'Expired' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Icon name="calendar" :size="14" class="text-muted" />
+          <label class="text-xs sm:text-sm text-muted">Range</label>
+          <select
+            v-model="range"
+            @change="onRangeChange"
+            class="rounded-lg border border-border px-2 sm:px-3 py-1.5 sm:py-2 min-w-[140px] sm:min-w-[180px] text-xs sm:text-sm"
+          >
+            <option value="24h">Last 24 hours</option>
+            <option value="7d">Last 7 days</option>
+            <option value="14d">Last 14 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+            <option value="180d">Last 180 days</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="month">This month</option>
+            <option value="ytd">Year to date</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
       </div>
     </div>
 
     <!-- KPIs -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <template v-if="loadingKpis">
         <div class="card p-5"><BaseSkeleton :lines="3" /></div>
         <div class="card p-5"><BaseSkeleton :lines="3" /></div>
@@ -555,7 +570,7 @@ export default {
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
       <BarChart
         class="lg:col-span-2"
         title="Revenue"
@@ -587,17 +602,23 @@ export default {
     <FunnelChart :steps="funnel || []" />
 
     <!-- Live Feed -->
-    <div class="card p-4">
+    <div class="card p-3 sm:p-4">
       <div class="flex items-center justify-between mb-3">
-        <div class="chip">Live Now</div>
-        <div class="text-xs text-muted">Last 10 actions</div>
+        <div class="chip text-xs">Live Now</div>
+        <div class="text-[10px] sm:text-xs text-muted">Last 10 actions</div>
       </div>
-      <ul class="text-sm divide-y divide-border">
-        <li v-for="a in liveActions" :key="a.id + a.when" class="py-2 flex justify-between">
-          <span
-            ><span class="font-medium text-heading">{{ a.id }}</span> — {{ a.action }}</span
-          >
-          <span class="text-muted">{{ new Date(a.when).toLocaleTimeString() }}</span>
+      <ul class="text-xs sm:text-sm divide-y divide-border">
+        <li
+          v-for="a in liveActions"
+          :key="a.id + a.when"
+          class="py-2 flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0"
+        >
+          <span class="truncate">
+            <span class="font-medium text-heading">{{ a.id }}</span> — {{ a.action }}
+          </span>
+          <span class="text-muted text-[10px] sm:text-xs flex-shrink-0">{{
+            new Date(a.when).toLocaleTimeString()
+          }}</span>
         </li>
       </ul>
     </div>
@@ -628,94 +649,116 @@ export default {
     </BaseTable>
 
     <!-- Highlights Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card p-4">
-        <div class="font-medium mb-3">Top Viewed Products</div>
-        <ul class="space-y-2 text-sm">
-          <li v-for="p in topProducts" :key="p.product" class="flex justify-between">
-            <span>{{ p.product }}</span>
-            <span class="text-muted"
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+      <div class="card p-3 sm:p-4">
+        <div class="font-medium mb-3 text-sm sm:text-base">Top Viewed Products</div>
+        <ul class="space-y-2 text-xs sm:text-sm">
+          <li
+            v-for="p in topProducts"
+            :key="p.product"
+            class="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0"
+          >
+            <span class="truncate">{{ p.product }}</span>
+            <span class="text-muted text-[10px] sm:text-xs flex-shrink-0"
               >{{ p.views }} views • {{ p.attentionPct }}% ➜ {{ p.inquiryPct }}%</span
             >
           </li>
         </ul>
       </div>
-      <div class="card p-4">
-        <div class="font-medium mb-3">Top Landing Pages</div>
-        <ul class="space-y-2 text-sm">
-          <li v-for="p in topLanding" :key="p.url" class="flex justify-between">
-            <span class="text-forest-900">{{ p.url }}</span>
-            <span class="text-muted">{{ p.sessions }} sessions • {{ p.conversionRate }}%</span>
+      <div class="card p-3 sm:p-4">
+        <div class="font-medium mb-3 text-sm sm:text-base">Top Landing Pages</div>
+        <ul class="space-y-2 text-xs sm:text-sm">
+          <li
+            v-for="p in topLanding"
+            :key="p.url"
+            class="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0"
+          >
+            <span class="text-forest-900 truncate">{{ p.url }}</span>
+            <span class="text-muted text-[10px] sm:text-xs flex-shrink-0"
+              >{{ p.sessions }} sessions • {{ p.conversionRate }}%</span
+            >
           </li>
         </ul>
       </div>
     </div>
 
     <!-- SEO Keywords Block -->
-    <div class="card p-4 overflow-x-auto">
-      <div class="font-medium mb-3">SEO Keywords</div>
-      <table class="min-w-full text-sm">
+    <div class="card p-3 sm:p-4 overflow-x-auto">
+      <div class="font-medium mb-3 text-sm sm:text-base">SEO Keywords</div>
+      <table class="min-w-full text-xs sm:text-sm">
         <thead class="text-muted">
           <tr class="text-left">
-            <th class="py-2">Keyword</th>
-            <th class="py-2">Landing Page</th>
-            <th class="py-2">Sessions</th>
-            <th class="py-2">Inquiries</th>
-            <th class="py-2">Conversion</th>
-            <th class="py-2">Issue</th>
+            <th class="py-2 px-1 sm:px-2">Keyword</th>
+            <th class="py-2 px-1 sm:px-2">Landing Page</th>
+            <th class="py-2 px-1 sm:px-2">Sessions</th>
+            <th class="py-2 px-1 sm:px-2">Inquiries</th>
+            <th class="py-2 px-1 sm:px-2">Conversion</th>
+            <th class="py-2 px-1 sm:px-2">Issue</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="k in seoKeywords" :key="k.keyword" class="border-t border-border">
-            <td class="py-2">{{ k.keyword }}</td>
-            <td class="py-2 text-forest-900">{{ k.landingPage }}</td>
-            <td class="py-2">{{ k.sessions }}</td>
-            <td class="py-2">{{ k.inquiries }}</td>
-            <td class="py-2">{{ k.conversion }}%</td>
-            <td class="py-2">{{ k.issue || '-' }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ k.keyword }}</td>
+            <td class="py-2 px-1 sm:px-2 text-forest-900">{{ k.landingPage }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ k.sessions }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ k.inquiries }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ k.conversion }}%</td>
+            <td class="py-2 px-1 sm:px-2">{{ k.issue || '-' }}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Performance Issues -->
-    <div class="card p-4 overflow-x-auto">
-      <div class="font-medium mb-3">Performance Issues</div>
-      <table class="min-w-full text-sm">
+    <div class="card p-3 sm:p-4 overflow-x-auto">
+      <div class="font-medium mb-3 text-sm sm:text-base">Performance Issues</div>
+      <table class="min-w-full text-xs sm:text-sm">
         <thead class="text-muted">
           <tr class="text-left">
-            <th class="py-2">Page</th>
-            <th class="py-2">LCP (s)</th>
-            <th class="py-2">TTFB (s)</th>
-            <th class="py-2">Drop-offs</th>
+            <th class="py-2 px-1 sm:px-2">Page</th>
+            <th class="py-2 px-1 sm:px-2">LCP (s)</th>
+            <th class="py-2 px-1 sm:px-2">TTFB (s)</th>
+            <th class="py-2 px-1 sm:px-2">Drop-offs</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="p in perfIssues" :key="p.page" class="border-t border-border">
-            <td class="py-2">{{ p.page }}</td>
-            <td class="py-2">{{ p.lcp }}</td>
-            <td class="py-2">{{ p.ttfb }}</td>
-            <td class="py-2">{{ p.dropoffs }}%</td>
+            <td class="py-2 px-1 sm:px-2">{{ p.page }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ p.lcp }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ p.ttfb }}</td>
+            <td class="py-2 px-1 sm:px-2">{{ p.dropoffs }}%</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Lost Lead Alerts -->
-    <div class="card p-4">
-      <div class="font-medium mb-3">Drop-off & Lost Lead Alerts</div>
-      <div class="flex items-center justify-end gap-2 mb-2">
-        <button class="btn-primary px-3 py-1">Export</button>
-        <button class="btn-primary px-3 py-1">Send to Sales</button>
+    <div class="card p-3 sm:p-4">
+      <div class="font-medium mb-3 text-sm sm:text-base">Drop-off & Lost Lead Alerts</div>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 mb-2">
+        <button class="btn-primary px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs sm:text-sm">Export</button>
+        <button class="btn-primary px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs sm:text-sm">
+          Send to Sales
+        </button>
       </div>
-      <ul class="space-y-2 text-sm">
-        <li v-for="a in lostLeads" :key="a.id" class="flex justify-between items-center">
-          <div class="flex items-center gap-4">
+      <ul class="space-y-2 text-xs sm:text-sm">
+        <li
+          v-for="a in lostLeads"
+          :key="a.id"
+          class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0"
+        >
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
             <span class="font-medium text-heading">{{ a.id }}</span>
-            <span class="text-muted">Products: {{ a.productsViewed }}</span>
-            <span class="text-muted">Time: {{ Math.round(a.timeOnSiteSeconds / 60) }}m</span>
+            <span class="text-muted text-[10px] sm:text-xs">Products: {{ a.productsViewed }}</span>
+            <span class="text-muted text-[10px] sm:text-xs"
+              >Time: {{ Math.round(a.timeOnSiteSeconds / 60) }}m</span
+            >
           </div>
-          <router-link :to="`/leads/${a.id}`" class="btn-primary px-3 py-1">View Lead</router-link>
+          <router-link
+            :to="`/leads/${a.id}`"
+            class="btn-primary px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs sm:text-sm self-start sm:self-auto"
+            >View Lead</router-link
+          >
         </li>
       </ul>
     </div>

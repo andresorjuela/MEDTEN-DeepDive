@@ -10,8 +10,8 @@ export default {
 </script>
 
 <template>
-  <div class="card p-4">
-    <div class="font-medium mb-3">{{ title }}</div>
+  <div class="card p-4 sm:p-5">
+    <div class="font-medium mb-3 text-base sm:text-lg">{{ title }}</div>
     <ChartImpl :labels="labels" :data="data" />
   </div>
 </template>

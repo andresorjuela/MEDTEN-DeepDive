@@ -26,7 +26,8 @@ export default {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '68%',
+          // Slightly larger cutout on mobile for better readability
+          cutout: '72%',
           plugins: { legend: { display: false } },
         },
       })

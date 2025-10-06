@@ -24,11 +24,11 @@ export default {
 </script>
 
 <template>
-  <div class="card p-5">
+  <div class="card p-4 sm:p-5">
     <!-- Header with title and legend -->
-    <div class="flex items-center justify-between">
-      <div class="text-xl font-semibold text-heading">{{ title }}</div>
-      <div class="flex items-center gap-4 text-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="text-lg sm:text-xl font-semibold text-heading">{{ title }}</div>
+      <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
         <div v-for="ds in useDatasets" :key="ds.label" class="flex items-center gap-2">
           <span class="size-4 rounded-md" :style="{ background: ds.color }"></span>
           <span class="text-heading">{{ ds.label }}</span>
@@ -40,8 +40,13 @@ export default {
 
     <!-- Value + delta line -->
     <div class="flex items-center gap-3 mb-4">
-      <div class="text-4xl font-extrabold text-heading">{{ valueText }}</div>
-      <div :class="['text-sm font-medium', deltaPositive ? 'text-green-700' : 'text-orange-600']">
+      <div class="text-3xl sm:text-4xl font-extrabold text-heading">{{ valueText }}</div>
+      <div
+        :class="[
+          'text-xs sm:text-sm font-medium',
+          deltaPositive ? 'text-green-700' : 'text-orange-600',
+        ]"
+      >
         {{ deltaText }}
       </div>
     </div>

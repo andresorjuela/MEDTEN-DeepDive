@@ -57,8 +57,8 @@ export default {
 </script>
 
 <template>
-  <div class="card p-4">
-    <div class="grid grid-cols-3 gap-4">
+  <div class="card p-3 sm:p-4">
+    <div class="grid grid-cols-3 gap-3 sm:gap-4">
       <!-- Left stats -->
       <div class="col-span-3 lg:col-span-1 space-y-6">
         <div>
@@ -79,7 +79,7 @@ export default {
       <!-- Map area -->
       <div class="col-span-3 lg:col-span-2">
         <div
-          class="relative rounded-xl overflow-hidden bg-surface border border-border min-h-[240px]"
+          class="relative rounded-xl overflow-hidden bg-surface border border-border min-h-[200px] sm:min-h-[240px]"
         >
           <!-- dotted map background -->
           <div class="absolute inset-0 opacity-70" aria-hidden="true">
@@ -103,7 +103,9 @@ export default {
           </div>
         </div>
 
-        <div class="flex items-center justify-between mt-3 text-xs text-muted">
+        <div
+          class="flex items-center justify-between mt-2 sm:mt-3 text-[10px] sm:text-xs text-muted"
+        >
           <span>{{ updatedText }}</span>
           <button
             class="text-forest-900 hover:underline inline-flex items-center gap-2"

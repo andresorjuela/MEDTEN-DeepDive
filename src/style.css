@@ -48,6 +48,17 @@
     @apply bg-surface;
   }
 
+  /* Mobile-first improvements */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Better mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
   /* Reusable card container */
   .card {
     @apply bg-card rounded-2xl border border-border shadow-[var(--shadow-soft)];
@@ -72,9 +83,10 @@
 
   /* Primary action button with beautiful gradient */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl text-white px-5 py-2.5 shadow transition will-change-transform font-medium cursor-pointer;
+    @apply inline-flex items-center justify-center rounded-xl text-white px-4 sm:px-5 py-2 sm:py-2.5 shadow transition will-change-transform font-medium cursor-pointer touch-manipulation;
     background: linear-gradient(135deg, #0f261c 0%, #1f543b 50%, #16a34a 100%);
     border: none;
+    min-height: 44px; /* iOS touch target */
   }
   .btn-primary:hover {
     @apply scale-[1.02] shadow-[var(--shadow-elevated)];
@@ -90,9 +102,10 @@
 
   /* Secondary button with subtle gradient */
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl text-forest-900 px-5 py-2.5 shadow transition will-change-transform font-medium cursor-pointer;
+    @apply inline-flex items-center justify-center rounded-xl text-forest-900 px-4 sm:px-5 py-2 sm:py-2.5 shadow transition will-change-transform font-medium cursor-pointer touch-manipulation;
     background: linear-gradient(135deg, #f5f7f6 0%, #e7ebea 100%);
     border: none;
+    min-height: 44px; /* iOS touch target */
   }
   .btn-secondary:hover {
     @apply scale-[1.02] shadow-[var(--shadow-elevated)];

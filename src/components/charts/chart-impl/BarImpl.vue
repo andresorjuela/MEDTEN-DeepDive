@@ -29,7 +29,9 @@ export default {
             data: d.data,
             backgroundColor: d.color,
             borderRadius: 6,
-            barThickness: 18,
+            // Let Chart.js size bars responsively; cap their size for small screens
+            barThickness: 'flex',
+            maxBarThickness: 18,
           })),
         },
         options: {

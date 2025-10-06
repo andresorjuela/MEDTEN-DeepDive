@@ -1,17 +1,21 @@
 <template>
-  <div class="card p-4 bg-yellow-50 border border-yellow-200">
-    <h3 class="font-semibold text-yellow-800 mb-2">🔍 Environment Debug</h3>
-    <div class="text-sm space-y-1">
+  <div class="card p-3 sm:p-4 bg-yellow-50 border border-yellow-200">
+    <h3 class="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">🔍 Environment Debug</h3>
+    <div class="text-xs sm:text-sm space-y-1">
       <div><strong>VITE_MOCK_MODE:</strong> {{ mockMode }}</div>
       <div><strong>VITE_API_BASE_URL:</strong> {{ apiBaseUrl }}</div>
       <div><strong>PROD Mode:</strong> {{ isProd }}</div>
       <div><strong>Using Live Data:</strong> {{ usingLiveData ? '✅ Yes' : '❌ No' }}</div>
       <div><strong>API Calls Made:</strong> {{ apiCallCount }}</div>
     </div>
-    <button @click="testApiCall" class="mt-2 btn-primary px-3 py-1 text-sm" :disabled="testing">
+    <button
+      @click="testApiCall"
+      class="mt-2 btn-primary px-2.5 py-1 text-xs sm:text-sm"
+      :disabled="testing"
+    >
       {{ testing ? 'Testing...' : 'Test API Call' }}
     </button>
-    <div v-if="testResult" class="mt-2 p-2 bg-gray-100 rounded text-xs">
+    <div v-if="testResult" class="mt-2 p-2 bg-gray-100 rounded text-[10px] sm:text-xs">
       <pre>{{ testResult }}</pre>
     </div>
   </div>
