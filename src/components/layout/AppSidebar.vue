@@ -30,7 +30,7 @@ export default {
   <!-- Mobile Menu Button -->
   <button
     @click="toggleMobileMenu"
-    class="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-forest-900 text-white rounded-lg shadow-lg touch-manipulation hover:bg-forest-800 transition-colors"
+    class="lg:hidden fixed top-4 left-4 z-[70] p-3 bg-forest-900 text-white rounded-lg shadow-lg touch-manipulation hover:bg-forest-800 transition-colors"
   >
     <Icon name="menu" :size="20" color="white" />
   </button>
@@ -39,7 +39,7 @@ export default {
   <div
     v-if="isMobileMenuOpen"
     @click="closeMobileMenu"
-    class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+    class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-[60] transition-opacity duration-300"
   ></div>
 
   <!-- Sidebar -->
@@ -47,9 +47,9 @@ export default {
     :class="[
       'bg-forest-900 text-white min-h-screen transition-transform duration-300 ease-in-out',
       // Desktop: always visible, takes space
-      'lg:relative lg:flex lg:w-[240px] lg:flex-col lg:translate-x-0',
+      'lg:flex lg:relative lg:w-[240px] lg:flex-col lg:translate-x-0',
       // Mobile: overlay, no space when hidden
-      'lg:hidden fixed top-0 left-0 w-[280px] sm:w-[300px] z-50',
+      'fixed top-0 left-0 w-[280px] sm:w-[300px] z-[65]',
       isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
     ]"
   >
