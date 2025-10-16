@@ -386,7 +386,7 @@ export default {
             <div
               v-for="event in verificationData.topEvents.slice(0, 8)"
               :key="event[0]"
-              class="bg-gray-100 p-2 rounded text-sm"
+              class="bg-slate-100 p-2 rounded text-sm"
             >
               <div class="font-mono text-xs">{{ event[0] }}</div>
               <div class="text-gray-600">{{ event[1] }}</div>
@@ -401,7 +401,7 @@ export default {
             <div
               v-for="event in verificationData.allEvents.slice(0, 12)"
               :key="event[0]"
-              class="bg-gray-100 p-2 rounded text-sm"
+              class="bg-slate-100 p-2 rounded text-sm"
             >
               <div class="font-mono text-xs">{{ event[0] }}</div>
               <div class="text-gray-600">{{ event[1] }}</div>
@@ -416,7 +416,7 @@ export default {
             <div
               v-for="event in verificationData.topEvents.slice(0, 8)"
               :key="event[0]"
-              class="bg-gray-100 p-2 rounded text-sm"
+              class="bg-slate-100 p-2 rounded text-sm"
             >
               <div class="font-mono text-xs">{{ event[0] }}</div>
               <div class="text-gray-600">{{ event[1] }}</div>
@@ -431,7 +431,7 @@ export default {
             <div
               v-for="day in verificationData.recentDates.slice(0, 10)"
               :key="day[0]"
-              class="bg-gray-100 p-2 rounded text-sm text-center"
+              class="bg-slate-100 p-2 rounded text-sm text-center"
             >
               <div class="text-xs text-gray-600">{{ day[0] }}</div>
               <div class="font-bold">{{ day[1] }} events</div>

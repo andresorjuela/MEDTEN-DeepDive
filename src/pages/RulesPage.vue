@@ -213,37 +213,37 @@
                 <div
                   class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <code class="bg-gray-100 px-2 py-1 rounded text-xs">page_view</code>
+                  <code class="bg-slate-100 px-2 py-1 rounded text-xs">page_view</code>
                   <span class="text-gray-600">Page visits</span>
                 </div>
                 <div
                   class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <code class="bg-gray-100 px-2 py-1 rounded text-xs">product_viewed</code>
+                  <code class="bg-slate-100 px-2 py-1 rounded text-xs">product_viewed</code>
                   <span class="text-gray-600">Product page views</span>
                 </div>
                 <div
                   class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <code class="bg-gray-100 px-2 py-1 rounded text-xs">pdf_opened</code>
+                  <code class="bg-slate-100 px-2 py-1 rounded text-xs">pdf_opened</code>
                   <span class="text-gray-600">PDF downloads</span>
                 </div>
                 <div
                   class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <code class="bg-gray-100 px-2 py-1 rounded text-xs">reached_inquiry_form</code>
+                  <code class="bg-slate-100 px-2 py-1 rounded text-xs">reached_inquiry_form</code>
                   <span class="text-gray-600">Form interactions</span>
                 </div>
                 <div
                   class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <code class="bg-gray-100 px-2 py-1 rounded text-xs">LOGIN_SUCCESS</code>
+                  <code class="bg-slate-100 px-2 py-1 rounded text-xs">LOGIN_SUCCESS</code>
                   <span class="text-gray-600">Successful logins</span>
                 </div>
                 <div
                   class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <code class="bg-gray-100 px-2 py-1 rounded text-xs">form_exit</code>
+                  <code class="bg-slate-100 px-2 py-1 rounded text-xs">form_exit</code>
                   <span class="text-gray-600">Form abandonment</span>
                 </div>
               </div>

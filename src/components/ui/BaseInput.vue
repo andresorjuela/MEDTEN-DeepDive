@@ -335,7 +335,7 @@ textarea::-webkit-scrollbar {
 }
 
 textarea::-webkit-scrollbar-track {
-  @apply bg-gray-100 rounded;
+  @apply bg-slate-100 rounded;
 }
 
 textarea::-webkit-scrollbar-thumb {

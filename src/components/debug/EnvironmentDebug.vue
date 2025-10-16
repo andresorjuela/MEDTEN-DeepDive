@@ -15,7 +15,7 @@
     >
       {{ testing ? 'Testing...' : 'Test API Call' }}
     </button>
-    <div v-if="testResult" class="mt-2 p-2 bg-gray-100 rounded text-[10px] sm:text-xs">
+    <div v-if="testResult" class="mt-2 p-2 bg-slate-100 rounded text-[10px] sm:text-xs">
       <pre>{{ testResult }}</pre>
     </div>
   </div>
