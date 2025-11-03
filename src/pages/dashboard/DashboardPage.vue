@@ -109,10 +109,15 @@ export default {
       }
     },
     async onRangeChange() {
-      // Do not auto-fetch on range change. User controls fetching via Refresh.
-      this.dashboardStore.kpisRange = this.range
-      this.dashboardStore.kpisLastFetched = null
-      console.log('📅 Range changed to:', this.range, '- will fetch on next Refresh')
+      try {
+        console.log('📅 Range changed to:', this.range, '- fetching fresh data')
+        this.dashboardStore.clearCache()
+        await this.dashboardStore.fetchAllData(this.range, true)
+        await this.dashboardStore.fetchRecentLeads(1, 10, true)
+        console.log('✅ Range change data loaded')
+      } catch (error) {
+        console.error('Error loading data for new range:', error)
+      }
     },
     async fetchRecent(page = 1) {
       try {
