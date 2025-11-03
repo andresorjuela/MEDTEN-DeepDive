@@ -233,20 +233,28 @@ export const useDashboardStore = defineStore('dashboard', {
       }
     },
 
-    // Combined fetch action - sequential to avoid overwhelming cold Lambda
+    // Combined fetch action - prioritize KPIs (< 3s target), load others in background
     async fetchAllData(range = '7d', forceRefresh = false) {
       console.log('📊 Fetching all dashboard data...')
       try {
-        // Fetch sequentially with small delays to help Lambda warm up and avoid overwhelming it
-        // This reduces 502 errors from parallel requests hitting a cold Lambda
+        // 1) KPIs first (immediate), so UI updates fast
         await this.fetchKPIs(range, forceRefresh)
-        await new Promise((resolve) => setTimeout(resolve, 200)) // Small delay between requests
 
-        await this.fetchCharts(range, forceRefresh)
-        await new Promise((resolve) => setTimeout(resolve, 200))
+        // 2) Charts and tables in the background (do not block KPIs)
+        //    Use small delay to avoid spiky concurrency on cold Lambda
+        setTimeout(() => {
+          this.fetchCharts(range, forceRefresh).catch((e) =>
+            console.warn('⚠️ Charts load failed (background):', e?.message || e),
+          )
+        }, 100)
 
-        await this.fetchTables(forceRefresh)
-        console.log('📊 All dashboard data cached successfully')
+        setTimeout(() => {
+          this.fetchTables(forceRefresh).catch((e) =>
+            console.warn('⚠️ Tables load failed (background):', e?.message || e),
+          )
+        }, 200)
+
+        console.log('✅ KPIs loaded; charts/tables loading in background')
       } catch (error) {
         console.error('❌ Error fetching all dashboard data:', error)
         // Don't throw - let individual methods handle errors and keep previous data
