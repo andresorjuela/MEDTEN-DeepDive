@@ -33,6 +33,7 @@ export default {
       debugQuery:
         'SELECT event, count() AS c FROM events WHERE timestamp > now() - interval 30 day GROUP BY event ORDER BY c DESC LIMIT 10',
       debugResponse: null,
+      debugLoading: false,
       verificationLoading: false,
       verificationData: null,
     }
@@ -97,11 +98,14 @@ export default {
     },
     async loadAllData() {
       try {
-        await this.dashboardStore.fetchAllData(this.range)
-        // Also fetch recent leads separately as it might need different caching
-        await this.dashboardStore.fetchRecentLeads(1, 10)
+        // Always fetch fresh live data on initial load (bypass cache)
+        console.log('📊 Loading dashboard data - fetching live data from PostHog...')
+        this.dashboardStore.clearCache() // Clear any stale cache
+        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh for live data
+        // Also fetch recent leads separately
+        await this.dashboardStore.fetchRecentLeads(1, 10, true)
       } catch (error) {
-        console.error('Error loading dashboard data:', error)
+        console.error('❌ Error loading dashboard data:', error)
       }
     },
     async onRangeChange() {
@@ -124,10 +128,17 @@ export default {
     },
     async refreshData() {
       try {
-        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh
-        await this.dashboardStore.fetchRecentLeads(1, 10, true) // Force refresh
+        console.log('🔄 Refreshing dashboard data - bypassing cache for live data...')
+        // Clear cache first to ensure fresh data
+        this.dashboardStore.clearCache()
+        // Fetch all data with forceRefresh=true to bypass cache
+        await Promise.all([
+          this.dashboardStore.fetchAllData(this.range, true), // Force refresh - always fetch live data
+          this.dashboardStore.fetchRecentLeads(1, 10, true), // Force refresh - always fetch live data
+        ])
+        console.log('✅ Dashboard data refreshed with live data from PostHog')
       } catch (error) {
-        console.error('Error refreshing data:', error)
+        console.error('❌ Error refreshing data:', error)
       }
     },
     async clearCacheAndRefresh() {
@@ -145,6 +156,9 @@ export default {
       events.kpi_clicked(name)
     },
     async runDebugQuery() {
+      this.debugLoading = true
+      this.debugResponse = null
+
       try {
         console.log('🔍 Debug Query - Environment:', {
           VITE_MOCK_MODE: import.meta.env.VITE_MOCK_MODE,
@@ -152,12 +166,56 @@ export default {
           PROD: import.meta.env.PROD,
         })
 
+        console.log('📤 Sending request:', {
+          url: api.defaults.baseURL,
+          method: 'POST',
+          query: this.debugQuery,
+        })
+
+        // Check if query is empty
+        if (!this.debugQuery || this.debugQuery.trim() === '') {
+          this.debugResponse = {
+            error: 'Query is empty. Please enter a valid HogQL query.',
+          }
+          return
+        }
+
         const r = await api.post('', {
           query: this.debugQuery,
         })
+
+        console.log('✅ Response received:', r.data)
         this.debugResponse = r.data
       } catch (e) {
-        this.debugResponse = { error: String(e && e.message) }
+        console.error('❌ Debug Query Error:', e)
+        console.error('❌ Error Details:', {
+          message: e.message,
+          response: e.response?.data,
+          status: e.response?.status,
+          statusText: e.response?.statusText,
+          config: {
+            url: e.config?.url,
+            baseURL: e.config?.baseURL,
+            method: e.config?.method,
+            data: e.config?.data,
+          },
+        })
+
+        // Provide detailed error information
+        this.debugResponse = {
+          error: e.message || 'Unknown error occurred',
+          status: e.response?.status,
+          statusText: e.response?.statusText,
+          responseData: e.response?.data,
+          requestConfig: {
+            url: e.config?.url || api.defaults.baseURL,
+            method: e.config?.method || 'POST',
+            data: e.config?.data,
+          },
+          fullError: e.toString(),
+        }
+      } finally {
+        this.debugLoading = false
       }
     },
     async testLambdaConnection() {
@@ -520,7 +578,7 @@ export default {
           <BaseKpi
             title="Total Visits"
             :value="kpis.find((k) => k.key === 'total_visits')?.value || '0'"
-            :delta="kpis.find((k) => k.key === 'total_visits')?.delta || '+0%'"
+            :delta="kpis.find((k) => k.key === 'total_visits')?.delta ?? 0"
           >
             <template #icon>
               <Icon name="users" :size="20" color="white" />
@@ -533,7 +591,7 @@ export default {
           <BaseKpi
             title="Inquiries Submitted"
             :value="kpis.find((k) => k.key === 'inquiries_submitted')?.value || '0'"
-            :delta="kpis.find((k) => k.key === 'inquiries_submitted')?.delta || '+0%'"
+            :delta="kpis.find((k) => k.key === 'inquiries_submitted')?.delta ?? 0"
           >
             <template #icon>
               <Icon name="fileText" :size="20" color="white" />
@@ -546,7 +604,7 @@ export default {
           <BaseKpi
             title="Drop Off Rate"
             :value="kpis.find((k) => k.key === 'drop_off_rate')?.value || '0%'"
-            :delta="kpis.find((k) => k.key === 'drop_off_rate')?.delta || '+0%'"
+            :delta="kpis.find((k) => k.key === 'drop_off_rate')?.delta ?? 0"
           >
             <template #icon>
               <Icon name="trendingDown" :size="20" color="white" />
@@ -559,7 +617,7 @@ export default {
           <BaseKpi
             title="Hot Leads"
             :value="kpis.find((k) => k.key === 'hot_leads')?.value || '0'"
-            :delta="kpis.find((k) => k.key === 'hot_leads')?.delta || '+0%'"
+            :delta="kpis.find((k) => k.key === 'hot_leads')?.delta ?? 0"
           >
             <template #icon>
               <Icon name="flame" :size="20" color="white" />
@@ -775,10 +833,29 @@ export default {
         class="w-full rounded-lg border border-border p-2 font-mono text-sm"
       ></textarea>
       <div class="mt-2 flex items-center gap-2">
-        <button class="btn-primary px-3 py-1" @click="runDebugQuery">Run</button>
+        <button class="btn-primary px-3 py-1" @click="runDebugQuery" :disabled="debugLoading">
+          {{ debugLoading ? 'Running...' : 'Run' }}
+        </button>
         <span class="text-xs text-muted">Preview raw JSON below</span>
       </div>
-      <pre class="mt-3 bg-surface rounded-lg p-3 overflow-auto text-xs">{{ debugResponse }}</pre>
+      <div v-if="debugResponse" class="mt-3">
+        <div v-if="debugResponse.error" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+          <div class="font-semibold text-red-800 mb-2">❌ Error:</div>
+          <div class="text-sm text-red-700 mb-2">{{ debugResponse.error }}</div>
+          <div v-if="debugResponse.status" class="text-xs text-red-600">
+            Status: {{ debugResponse.status }} {{ debugResponse.statusText || '' }}
+          </div>
+          <details v-if="debugResponse.responseData || debugResponse.requestConfig" class="mt-2">
+            <summary class="text-xs text-red-600 cursor-pointer">Show Details</summary>
+            <pre class="mt-2 text-xs overflow-auto">{{
+              JSON.stringify(debugResponse, null, 2)
+            }}</pre>
+          </details>
+        </div>
+        <pre v-else class="bg-surface rounded-lg p-3 overflow-auto text-xs">{{
+          JSON.stringify(debugResponse, null, 2)
+        }}</pre>
+      </div>
     </div>
   </div>
 </template>

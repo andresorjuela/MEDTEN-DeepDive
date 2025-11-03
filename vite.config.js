@@ -8,6 +8,8 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()], // Temporarily disable vueDevTools to fix the error
   server: {
+    port: 5173,
+    strictPort: true, // Fail if port is already in use
     // Remove proxy - we'll use AWS API Gateway directly
     // proxy: {
     //   '/api': {

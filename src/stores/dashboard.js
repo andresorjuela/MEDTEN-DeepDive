@@ -3,8 +3,13 @@ import { dashboardApi } from '../services/dashboardApi'
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
-    // KPIs
-    kpis: [],
+    // KPIs - Initialize with default values to prevent blank displays
+    kpis: [
+      { key: 'total_visits', title: 'Total Visits', value: '0', delta: 0 },
+      { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: '0', delta: 0 },
+      { key: 'drop_off_rate', title: 'Drop Off Rate', value: '0%', delta: 0 },
+      { key: 'hot_leads', title: 'Hot Leads', value: '0', delta: 0 },
+    ],
     kpisLoading: false,
     kpisLastFetched: null,
     kpisRange: '7d',
@@ -30,8 +35,8 @@ export const useDashboardStore = defineStore('dashboard', {
     tablesLoading: false,
     tablesLastFetched: null,
 
-    // Cache settings
-    cacheTimeout: 30 * 1000, // 30 seconds in milliseconds (much shorter for better UX)
+    // Cache settings - Reduced timeout for fresher data
+    cacheTimeout: 15 * 1000, // 15 seconds in milliseconds - shorter for more frequent live updates
   }),
 
   getters: {
@@ -63,7 +68,7 @@ export const useDashboardStore = defineStore('dashboard', {
   actions: {
     // KPI actions
     async fetchKPIs(range = '7d', forceRefresh = false) {
-      // Check if we need to fetch (cache invalid or range changed or force refresh)
+      // Always fetch fresh data when forceRefresh is true, otherwise check cache
       if (
         !forceRefresh &&
         this.isKpisCacheValid &&
@@ -75,20 +80,40 @@ export const useDashboardStore = defineStore('dashboard', {
       }
 
       this.kpisLoading = true
+      const previousKPIs = [...this.kpis] // Keep previous data during loading
+
       try {
-        console.log('📊 Fetching KPIs from API...')
-        this.kpis = await dashboardApi.getDashboardKPIs({ range })
+        console.log('📊 Fetching fresh KPIs from PostHog API...', { range, forceRefresh })
+        const freshKPIs = await dashboardApi.getDashboardKPIs({ range })
+
+        // Ensure all required KPIs are present with default fallbacks
+        const defaultKPIs = [
+          { key: 'total_visits', title: 'Total Visits', value: '0', delta: 0 },
+          { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: '0', delta: 0 },
+          { key: 'drop_off_rate', title: 'Drop Off Rate', value: '0%', delta: 0 },
+          { key: 'hot_leads', title: 'Hot Leads', value: '0', delta: 0 },
+        ]
+
+        // Merge fresh data with defaults to ensure no blank KPIs
+        const mergedKPIs = defaultKPIs.map((defaultKpi) => {
+          const freshKpi = freshKPIs.find((k) => k.key === defaultKpi.key)
+          return freshKpi || defaultKpi
+        })
+
+        this.kpis = mergedKPIs
         this.kpisRange = range
         this.kpisLastFetched = Date.now()
-        console.log('📊 KPIs cached successfully:', this.kpis)
-        console.log(
-          '📊 Total Visits value:',
-          this.kpis.find((k) => k.key === 'total_visits')?.value,
-        )
+        console.log('✅ KPIs fetched and cached successfully:', this.kpis)
         return this.kpis
       } catch (error) {
         console.error('❌ Error fetching KPIs:', error)
-        throw error
+        // On error, keep previous data if available, otherwise use defaults
+        if (previousKPIs.length > 0) {
+          console.warn('⚠️ Using previous KPI data due to error')
+          this.kpis = previousKPIs
+        }
+        // Don't throw error - return existing data to prevent blank display
+        return this.kpis
       } finally {
         this.kpisLoading = false
       }

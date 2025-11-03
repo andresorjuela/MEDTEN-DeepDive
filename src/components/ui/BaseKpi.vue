@@ -4,15 +4,28 @@ export default {
   props: {
     title: String,
     value: [String, Number],
-    delta: Number,
+    delta: {
+      type: [Number, String],
+      default: 0,
+    },
     icon: String,
   },
   computed: {
     deltaColor() {
-      return (this.delta ?? 0) >= 0 ? 'text-green-700' : 'text-orange-600'
+      const deltaNum = typeof this.delta === 'string' ? parseFloat(this.delta) || 0 : (this.delta ?? 0)
+      return deltaNum >= 0 ? 'text-green-700' : 'text-orange-600'
     },
     deltaPrefix() {
-      return (this.delta ?? 0) >= 0 ? '+' : ''
+      const deltaNum = typeof this.delta === 'string' ? parseFloat(this.delta) || 0 : (this.delta ?? 0)
+      return deltaNum >= 0 ? '+' : ''
+    },
+    deltaValue() {
+      // Handle both numeric and string deltas, remove any existing % signs
+      const delta = this.delta ?? 0
+      if (typeof delta === 'string') {
+        return parseFloat(delta.replace('%', '')) || 0
+      }
+      return delta
     },
   },
 }
@@ -36,8 +49,8 @@ export default {
       >
         {{ value }}
       </div>
-      <div :class="['text-[10px] sm:text-xs font-medium', deltaColor]">
-        {{ deltaPrefix }}{{ delta }}%
+      <div v-if="deltaValue !== null && deltaValue !== undefined" :class="['text-[10px] sm:text-xs font-medium', deltaColor]">
+        {{ deltaPrefix }}{{ deltaValue }}%
       </div>
     </div>
   </div>

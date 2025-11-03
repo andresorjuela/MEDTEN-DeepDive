@@ -135,15 +135,15 @@ async function liveGetDashboardKPIs(opts = {}) {
   const hot = Number(hotQ.rows?.[0]?.[0] ?? 0)
 
   const kpis = [
-    { key: 'total_visits', title: 'Total Visits', value: visits, delta: '+0%' },
-    { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: baseCount, delta: '+0%' },
+    { key: 'total_visits', title: 'Total Visits', value: visits || 0, delta: 0 },
+    { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: baseCount || 0, delta: 0 },
     {
       key: 'drop_off_rate',
       title: 'Drop Off Rate',
       value: `${Number(dropoff.toFixed(2))}%`,
-      delta: '+0%',
+      delta: 0,
     },
-    { key: 'hot_leads', title: 'Hot Leads', value: hot, delta: '+0%' },
+    { key: 'hot_leads', title: 'Hot Leads', value: hot || 0, delta: 0 },
   ]
 
   console.log('🔍 API Debug - Total Visits calculation:', {

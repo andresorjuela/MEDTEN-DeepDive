@@ -36,12 +36,38 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Basic error normalization
+// Enhanced error handling with detailed error info
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    const message = error?.response?.data?.message || error.message || 'Request failed'
-    return Promise.reject(new Error(message))
+    // Log detailed error for debugging
+    console.error('🔴 API Error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      config: {
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        method: error.config?.method,
+      },
+    })
+
+    // Preserve full error object with all details
+    const enhancedError = new Error(
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error.message ||
+      'Request failed'
+    )
+
+    // Attach additional error details for debugging
+    enhancedError.response = error.response
+    enhancedError.config = error.config
+    enhancedError.status = error.response?.status
+    enhancedError.statusText = error.response?.statusText
+
+    return Promise.reject(enhancedError)
   },
 )
 
