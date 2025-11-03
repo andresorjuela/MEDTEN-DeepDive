@@ -84,6 +84,7 @@ export default {
     },
   },
   mounted() {
+    // Auto-fetch on initial mount (and browser refresh)
     this.loadAllData()
   },
   methods: {
@@ -98,26 +99,20 @@ export default {
     },
     async loadAllData() {
       try {
-        // Always fetch fresh live data on initial load (bypass cache)
-        console.log('📊 Loading dashboard data - fetching live data from PostHog...')
-        this.dashboardStore.clearCache() // Clear any stale cache
-        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh for live data
-        // Also fetch recent leads separately
+        console.log('📊 Auto-loading dashboard data on mount...')
+        this.dashboardStore.clearCache()
+        await this.dashboardStore.fetchAllData(this.range, true)
         await this.dashboardStore.fetchRecentLeads(1, 10, true)
+        console.log('✅ Dashboard data loaded on mount')
       } catch (error) {
-        console.error('❌ Error loading dashboard data:', error)
+        console.error('❌ Error loading dashboard data on mount:', error)
       }
     },
     async onRangeChange() {
-      try {
-        console.log('📅 Range changed to:', this.range, '- clearing cache and fetching fresh data')
-        this.dashboardStore.clearCache() // Clear cache first
-        this.dashboardStore.setCacheTimeout(1000) // Set very short cache (1 second) for immediate updates
-        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh for new range
-        this.dashboardStore.setCacheTimeout(30000) // Reset to normal cache timeout (30 seconds)
-      } catch (error) {
-        console.error('Error loading data for new range:', error)
-      }
+      // Do not auto-fetch on range change. User controls fetching via Refresh.
+      this.dashboardStore.kpisRange = this.range
+      this.dashboardStore.kpisLastFetched = null
+      console.log('📅 Range changed to:', this.range, '- will fetch on next Refresh')
     },
     async fetchRecent(page = 1) {
       try {
@@ -142,15 +137,9 @@ export default {
       }
     },
     async clearCacheAndRefresh() {
-      try {
-        console.log('🧹 Clearing cache and refreshing data...')
-        this.dashboardStore.clearCache()
-        await this.dashboardStore.fetchAllData(this.range, true) // Force refresh
-        await this.dashboardStore.fetchRecentLeads(1, 10, true) // Force refresh
-        console.log('✅ Cache cleared and data refreshed')
-      } catch (error) {
-        console.error('Error clearing cache and refreshing:', error)
-      }
+      // New behavior: only clear cache; do not fetch
+      console.log('🧹 Clearing cache only (no fetch). Data will refresh on next Refresh click.')
+      this.dashboardStore.clearCache()
     },
     onKpiClick(name) {
       events.kpi_clicked(name)
@@ -577,7 +566,7 @@ export default {
         <button class="text-left" @click="onKpiClick('Total Visits')">
           <BaseKpi
             title="Total Visits"
-            :value="kpis.find((k) => k.key === 'total_visits')?.value || '0'"
+            :value="kpis.find((k) => k.key === 'total_visits')?.value"
             :delta="kpis.find((k) => k.key === 'total_visits')?.delta ?? 0"
           >
             <template #icon>
@@ -590,7 +579,7 @@ export default {
         <button class="text-left" @click="onKpiClick('Inquiries Submitted')">
           <BaseKpi
             title="Inquiries Submitted"
-            :value="kpis.find((k) => k.key === 'inquiries_submitted')?.value || '0'"
+            :value="kpis.find((k) => k.key === 'inquiries_submitted')?.value"
             :delta="kpis.find((k) => k.key === 'inquiries_submitted')?.delta ?? 0"
           >
             <template #icon>
@@ -603,7 +592,7 @@ export default {
         <button class="text-left" @click="onKpiClick('Drop Off Rate')">
           <BaseKpi
             title="Drop Off Rate"
-            :value="kpis.find((k) => k.key === 'drop_off_rate')?.value || '0%'"
+            :value="kpis.find((k) => k.key === 'drop_off_rate')?.value"
             :delta="kpis.find((k) => k.key === 'drop_off_rate')?.delta ?? 0"
           >
             <template #icon>
@@ -616,7 +605,7 @@ export default {
         <button class="text-left" @click="onKpiClick('Hot Leads')">
           <BaseKpi
             title="Hot Leads"
-            :value="kpis.find((k) => k.key === 'hot_leads')?.value || '0'"
+            :value="kpis.find((k) => k.key === 'hot_leads')?.value"
             :delta="kpis.find((k) => k.key === 'hot_leads')?.delta ?? 0"
           >
             <template #icon>

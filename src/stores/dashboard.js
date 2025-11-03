@@ -80,39 +80,46 @@ export const useDashboardStore = defineStore('dashboard', {
       }
 
       this.kpisLoading = true
-      const previousKPIs = [...this.kpis] // Keep previous data during loading
+      const previousKPIs = Array.isArray(this.kpis) ? [...this.kpis] : [] // Keep previous data during loading
 
       try {
         console.log('📊 Fetching fresh KPIs from PostHog API...', { range, forceRefresh })
         const freshKPIs = await dashboardApi.getDashboardKPIs({ range })
 
-        // Ensure all required KPIs are present with default fallbacks
-        const defaultKPIs = [
-          { key: 'total_visits', title: 'Total Visits', value: '0', delta: 0 },
-          { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: '0', delta: 0 },
-          { key: 'drop_off_rate', title: 'Drop Off Rate', value: '0%', delta: 0 },
-          { key: 'hot_leads', title: 'Hot Leads', value: '0', delta: 0 },
-        ]
-
-        // Merge fresh data with defaults to ensure no blank KPIs
-        const mergedKPIs = defaultKPIs.map((defaultKpi) => {
-          const freshKpi = freshKPIs.find((k) => k.key === defaultKpi.key)
-          return freshKpi || defaultKpi
-        })
-
-        this.kpis = mergedKPIs
+        // If backend returned valid KPIs, use them as-is
+        if (Array.isArray(freshKPIs) && freshKPIs.length > 0) {
+          this.kpis = freshKPIs
+        } else if (previousKPIs.length > 0) {
+          // No data returned – keep last known values from Pinia
+          console.warn('⚠️ KPI API returned empty; keeping previous KPIs')
+          this.kpis = previousKPIs
+        } else {
+          // First-ever load fallback only
+          this.kpis = [
+            { key: 'total_visits', title: 'Total Visits', value: '0', delta: 0 },
+            { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: '0', delta: 0 },
+            { key: 'drop_off_rate', title: 'Drop Off Rate', value: '0%', delta: 0 },
+            { key: 'hot_leads', title: 'Hot Leads', value: '0', delta: 0 },
+          ]
+        }
         this.kpisRange = range
         this.kpisLastFetched = Date.now()
         console.log('✅ KPIs fetched and cached successfully:', this.kpis)
         return this.kpis
       } catch (error) {
         console.error('❌ Error fetching KPIs:', error)
-        // On error, keep previous data if available, otherwise use defaults
+        // On error, keep previous data if available; otherwise use minimal defaults
         if (previousKPIs.length > 0) {
           console.warn('⚠️ Using previous KPI data due to error')
           this.kpis = previousKPIs
+          return this.kpis
         }
-        // Don't throw error - return existing data to prevent blank display
+        this.kpis = [
+          { key: 'total_visits', title: 'Total Visits', value: '0', delta: 0 },
+          { key: 'inquiries_submitted', title: 'Inquiries Submitted', value: '0', delta: 0 },
+          { key: 'drop_off_rate', title: 'Drop Off Rate', value: '0%', delta: 0 },
+          { key: 'hot_leads', title: 'Hot Leads', value: '0', delta: 0 },
+        ]
         return this.kpis
       } finally {
         this.kpisLoading = false
@@ -226,19 +233,23 @@ export const useDashboardStore = defineStore('dashboard', {
       }
     },
 
-    // Combined fetch action
+    // Combined fetch action - sequential to avoid overwhelming cold Lambda
     async fetchAllData(range = '7d', forceRefresh = false) {
       console.log('📊 Fetching all dashboard data...')
       try {
-        await Promise.all([
-          this.fetchKPIs(range, forceRefresh),
-          this.fetchCharts(range, forceRefresh),
-          this.fetchTables(forceRefresh),
-        ])
+        // Fetch sequentially with small delays to help Lambda warm up and avoid overwhelming it
+        // This reduces 502 errors from parallel requests hitting a cold Lambda
+        await this.fetchKPIs(range, forceRefresh)
+        await new Promise((resolve) => setTimeout(resolve, 200)) // Small delay between requests
+
+        await this.fetchCharts(range, forceRefresh)
+        await new Promise((resolve) => setTimeout(resolve, 200))
+
+        await this.fetchTables(forceRefresh)
         console.log('📊 All dashboard data cached successfully')
       } catch (error) {
         console.error('❌ Error fetching all dashboard data:', error)
-        throw error
+        // Don't throw - let individual methods handle errors and keep previous data
       }
     },
 

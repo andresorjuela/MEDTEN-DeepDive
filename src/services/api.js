@@ -29,17 +29,26 @@ const api = axios.create({
   withCredentials: false, // Disable credentials for CORS
 })
 
+// Helper: delay Promise
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 // Attach auth token
 api.interceptors.request.use((config) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : ''
   if (token) config.headers.Authorization = `Bearer ${token}`
+  // Initialize retry metadata if not present
+  if (config.__retryCount === undefined) {
+    config.__retryCount = 0
+  }
   return config
 })
 
-// Enhanced error handling with detailed error info
+// Enhanced error handling with automatic retry for transient Lambda/API Gateway errors
 api.interceptors.response.use(
   (r) => r,
-  (error) => {
+  async (error) => {
     // Log detailed error for debugging
     console.error('🔴 API Error:', {
       message: error.message,
@@ -53,12 +62,36 @@ api.interceptors.response.use(
       },
     })
 
+    const config = error.config || {}
+
+    // Transient errors to retry (common with Lambda cold starts, API Gateway timeouts, network hiccups)
+    const status = error.response?.status
+    const isNetworkError =
+      !status && (error.message?.toLowerCase().includes('network') || error.code === 'ECONNABORTED')
+    const shouldRetryStatus = [502, 503, 504, 408, 429].includes(status)
+
+    // More aggressive retries for Lambda cold starts (502s)
+    const maxRetries = status === 502 ? 5 : 3 // Extra retries for 502 Bad Gateway (Lambda cold starts)
+
+    if ((isNetworkError || shouldRetryStatus) && (config.__retryCount || 0) < maxRetries) {
+      config.__retryCount = (config.__retryCount || 0) + 1
+      // Exponential backoff with longer delays for 502s (Lambda needs more time to warm up)
+      const baseDelay = status === 502 ? 500 : 250 // Start with 500ms for 502s
+      const backoffMs = Math.min(5000, baseDelay * 2 ** (config.__retryCount - 1))
+      console.warn(
+        `🔁 Retrying request (attempt ${config.__retryCount}/${maxRetries}) in ${backoffMs}ms...`,
+        { status, isNetworkError },
+      )
+      await delay(backoffMs)
+      return api.request(config)
+    }
+
     // Preserve full error object with all details
     const enhancedError = new Error(
       error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error.message ||
-      'Request failed'
+        error?.response?.data?.error ||
+        error.message ||
+        'Request failed',
     )
 
     // Attach additional error details for debugging
